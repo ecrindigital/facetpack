@@ -50,6 +50,9 @@
     "lint": "oxlint .",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
+    "test:coverage": "c8 ava",
+    "test:rust": "cargo test",
+    "test:rust:coverage": "cargo tarpaulin --out Stdout",
     "preversion": "napi build --platform && git add .",
     "version": "napi version",
     "prepare": "husky"
@@ -62,6 +65,7 @@
     "@taplo/cli": "^0.7.0",
     "@tybys/wasm-util": "^0.10.0",
     "ava": "^6.4.1",
+    "c8": "^10.1.3",
     "chalk": "^5.6.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.6",

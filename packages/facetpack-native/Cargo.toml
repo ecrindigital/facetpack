@@ -1,6 +1,6 @@
 
 [package]
-authors = ["LongYinan <lynweklm@gmail.com>"]
+authors = ["Ecrin Digital <contact@ecrin.digital>"]
 edition = "2021"
 name = "facetpack_native"
 version = "0.1.0"
@@ -9,8 +9,20 @@ version = "0.1.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-napi = "3.0.0"
+napi = { version = "3.0.0", features = ["napi6"] }
 napi-derive = "3.0.0"
+
+oxc_allocator = "0.104.0"
+oxc_parser = "0.104.0"
+oxc_transformer = "0.104.0"
+oxc_span = "0.104.0"
+oxc_diagnostics = "0.104.0"
+oxc_codegen = "0.104.0"
+oxc_isolated_declarations = "0.104.0"
+oxc_ast = "0.104.0"
+oxc_semantic = "0.104.0"
+
+thiserror = "1.0"
 
 [build-dependencies]
 napi-build = "2"
