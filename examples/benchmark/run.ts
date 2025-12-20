@@ -1,9 +1,3 @@
-/**
- * Facetpack Benchmark
- * Compare: Babel vs Facetpack/OXC
- * - Transformer only (micro benchmark)
- * - Full Metro build (macro benchmark)
- */
 import { bench, run, summary, group } from 'mitata'
 import { $ } from 'bun'
 import { resolve } from 'path'
@@ -19,7 +13,6 @@ console.log('')
 console.log('📦 Loading transformers...')
 
 import * as babel from '@babel/core'
-
 import { transformSync, JsxRuntime } from 'facetpack-native'
 
 const TEST_CODE = `
@@ -152,7 +145,6 @@ const styles = StyleSheet.create({
 });
 `
 
-// Babel options
 const babelOptions = {
   filename: 'App.tsx',
   presets: [
@@ -162,7 +154,6 @@ const babelOptions = {
   sourceMaps: false,
 }
 
-// OXC options
 const oxcOptions = {
   jsx: true,
   jsxRuntime: JsxRuntime.Automatic,
@@ -183,7 +174,6 @@ group('Transformer (single file)', () => {
   })
 })
 
-// Run transformer benchmark
 console.log('⏱️  Running transformer benchmark...\n')
 await run({ colors: true })
 
