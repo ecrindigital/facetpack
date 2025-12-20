@@ -8,7 +8,7 @@ use napi_derive::napi;
 pub use domain::types::*;
 
 use cqrs::command::TransformCommand;
-use cqrs::query::ParseQuery;
+use cqrs::query::{ParseQuery, ResolveBatchQuery, ResolveQuery, ResolveResult, ResolverOptions};
 use cqrs::traits::{Command, Query};
 
 
@@ -51,6 +51,17 @@ impl FacetPack {
     let command = TransformCommand::new(filename, source_text, options);
     command.execute().map_err(Into::into)
   }
+
+  #[napi]
+  pub fn resolve(
+    &self,
+    directory: String,
+    specifier: String,
+    options: Option<ResolverOptions>,
+  ) -> napi::Result<ResolveResult> {
+    let query = ResolveQuery::new(directory, specifier, options);
+    query.execute().map_err(Into::into)
+  }
 }
 
 #[napi]
@@ -71,4 +82,24 @@ pub fn transform_sync(
 ) -> napi::Result<TransformResult> {
   let command = TransformCommand::new(filename, source_text, options);
   command.execute().map_err(Into::into)
+}
+
+#[napi]
+pub fn resolve_sync(
+  directory: String,
+  specifier: String,
+  options: Option<ResolverOptions>,
+) -> napi::Result<ResolveResult> {
+  let query = ResolveQuery::new(directory, specifier, options);
+  query.execute().map_err(Into::into)
+}
+
+#[napi]
+pub fn resolve_batch_sync(
+  directory: String,
+  specifiers: Vec<String>,
+  options: Option<ResolverOptions>,
+) -> Vec<ResolveResult> {
+  let query = ResolveBatchQuery::new(directory, specifiers, options);
+  query.execute()
 }

@@ -1,6 +1,53 @@
-import { transformSync, JsxRuntime } from 'facetpack-native'
+import { transformSync, JsxRuntime, resolveBatchSync } from 'facetpack-native'
 import { parse } from '@babel/parser'
 import type { TransformParams, TransformResult, FacetpackOptions } from './types'
+import { setCachedResolutions } from './cache'
+
+const DEFAULT_SOURCE_EXTS = ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs']
+
+const IMPORT_REGEX = /(?:import|export)\s+(?:[\s\S]*?\s+from\s+)?['"]([^'"]+)['"]/g
+const REQUIRE_REGEX = /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g
+
+function extractSpecifiers(code: string): string[] {
+  const specifiers = new Set<string>()
+
+  let match: RegExpExecArray | null
+  while ((match = IMPORT_REGEX.exec(code)) !== null) {
+    if (match[1]) specifiers.add(match[1])
+  }
+  while ((match = REQUIRE_REGEX.exec(code)) !== null) {
+    if (match[1]) specifiers.add(match[1])
+  }
+
+  return Array.from(specifiers)
+}
+
+function preResolveImports(
+  filename: string,
+  code: string,
+  sourceExts: string[]
+): void {
+  const specifiers = extractSpecifiers(code)
+  if (specifiers.length === 0) return
+
+  const directory = filename.substring(0, filename.lastIndexOf('/'))
+
+  const results = resolveBatchSync(directory, specifiers, {
+    extensions: [...sourceExts.map(ext => `.${ext}`), '.json'],
+    mainFields: ['react-native', 'browser', 'main'],
+    conditionNames: ['react-native', 'import', 'require'],
+  })
+
+  const resolutions = new Map<string, string | null>()
+  for (let i = 0; i < specifiers.length; i++) {
+    const specifier = specifiers[i]
+    if (specifier) {
+      resolutions.set(specifier, results[i]?.path ?? null)
+    }
+  }
+
+  setCachedResolutions(filename, resolutions)
+}
 
 const defaultOptions: Required<FacetpackOptions> = {
   jsx: true,
@@ -98,6 +145,8 @@ export function transform(params: TransformParams): TransformResult {
       const errorMessage = result.errors.join('\n')
       throw new Error(`Facetpack transform error in ${filename}:\n${errorMessage}`)
     }
+
+    preResolveImports(filename, result.code, opts.sourceExts)
 
     const ast = parse(result.code, {
       sourceType: 'unambiguous',

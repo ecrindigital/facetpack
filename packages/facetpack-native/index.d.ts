@@ -4,6 +4,7 @@ export declare class FacetPack {
   constructor()
   parse(filename: string, sourceText: string, options?: ParseOptions | undefined | null): ParseResult
   transform(filename: string, sourceText: string, options?: TransformOptions | undefined | null): TransformResult
+  resolve(directory: string, specifier: string, options?: ResolverOptions | undefined | null): ResolveResult
 }
 
 export declare const enum JsxRuntime {
@@ -23,6 +24,21 @@ export interface ParseResult {
 }
 
 export declare function parseSync(filename: string, sourceText: string, options?: ParseOptions | undefined | null): ParseResult
+
+export declare function resolveBatchSync(directory: string, specifiers: Array<string>, options?: ResolverOptions | undefined | null): Array<ResolveResult>
+
+export interface ResolveResult {
+  path?: string
+  error?: string
+}
+
+export interface ResolverOptions {
+  extensions?: Array<string>
+  mainFields?: Array<string>
+  conditionNames?: Array<string>
+}
+
+export declare function resolveSync(directory: string, specifier: string, options?: ResolverOptions | undefined | null): ResolveResult
 
 export declare const enum SourceType {
   Script = 'Script',
