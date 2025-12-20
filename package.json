@@ -1,8 +1,11 @@
 {
-  "name": "facetpack",
-  "module": "index.ts",
+  "name": "facetpack-monorepo",
   "type": "module",
   "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
   "devDependencies": {
     "@types/bun": "latest"
   },

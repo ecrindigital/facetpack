@@ -1,0 +1,74 @@
+{
+  "name": "facetpack",
+  "version": "0.1.0",
+  "description": "High-performance Metro transformer powered by OXC",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./transformer": {
+      "types": "./dist/transformer.d.ts",
+      "import": "./dist/transformer.js",
+      "require": "./dist/transformer.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "author": {
+    "name": "Ecrin Digital",
+    "email": "contact@ecrin.digital",
+    "url": "https://ecrin.digital"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ecrindigital/facetpack.git",
+    "directory": "packages/facetpack"
+  },
+  "homepage": "https://github.com/ecrindigital/facetpack#readme",
+  "bugs": {
+    "url": "https://github.com/ecrindigital/facetpack/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "metro",
+    "react-native",
+    "transformer",
+    "oxc",
+    "bundler",
+    "compiler",
+    "typescript",
+    "jsx"
+  ],
+  "peerDependencies": {
+    "metro": ">=0.80.0",
+    "metro-config": ">=0.80.0"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.24.0",
+    "facetpack-native": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "metro": "^0.81.0",
+    "metro-config": "^0.81.0",
+    "typescript": "^5.7.0"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts ./src/transformer.ts --outdir ./dist --target node --format esm --external facetpack-native --external @babel/parser && bun run build:cjs && bun run build:types",
+    "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --external facetpack-native --external @babel/parser && bun build ./src/transformer.ts --outfile ./dist/transformer.cjs --target node --format cjs --external facetpack-native --external @babel/parser",
+    "build:types": "bunx tsc",
+    "dev": "bun build ./src/index.ts --outdir ./dist --target node --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "clean": "rm -rf dist"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

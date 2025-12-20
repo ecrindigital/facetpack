@@ -1,0 +1,18 @@
+{
+  "name": "benchmark",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "bench": "bun run.ts",
+    "bench:babel": "cd ../expo-babel && rm -rf .expo dist && npx expo export --platform ios --output-dir ./dist",
+    "bench:facetpack": "cd ../expo-facetpack && rm -rf .expo dist && npx expo export --platform ios --output-dir ./dist"
+  },
+  "dependencies": {
+    "mitata": "^1.0.34",
+    "@babel/core": "^7.24.0",
+    "@babel/preset-react": "^7.24.0",
+    "@babel/preset-typescript": "^7.24.0",
+    "facetpack-native": "workspace:*"
+  }
+}
