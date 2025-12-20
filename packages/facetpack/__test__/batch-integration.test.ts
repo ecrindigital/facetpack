@@ -28,14 +28,12 @@ test('transform should pre-resolve imports in batch', () => {
 
   expect(result.code).toBeDefined()
 
-  // Check cache was populated
   const stats = getCacheStats()
   expect(stats.files).toBe(1)
   expect(stats.resolutions).toBeGreaterThan(0)
 })
 
 test('extractSpecifiers should find all imports', () => {
-  // This is implicitly tested via getCacheStats
   const result = transform({
     filename: '/test/App.tsx',
     src: TEST_CODE,
@@ -43,7 +41,6 @@ test('extractSpecifiers should find all imports', () => {
   })
 
   const stats = getCacheStats()
-  // Should find: 'react', 'react-native', 'react/jsx-runtime' (OXC adds jsx-runtime)
   expect(stats.resolutions).toBe(3)
 })
 

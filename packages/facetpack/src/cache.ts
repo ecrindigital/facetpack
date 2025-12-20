@@ -5,7 +5,7 @@ interface CachedResolution {
 
 const resolutionCache = new Map<string, Map<string, CachedResolution>>()
 
-const CACHE_TTL = 30000 // 30 seconds
+const CACHE_TTL = 30000
 
 export function setCachedResolutions(
   originModulePath: string,
@@ -31,7 +31,6 @@ export function getCachedResolution(
   const cached = fileCache.get(specifier)
   if (!cached) return undefined
 
-  // Check TTL
   if (Date.now() - cached.timestamp > CACHE_TTL) {
     fileCache.delete(specifier)
     return undefined
