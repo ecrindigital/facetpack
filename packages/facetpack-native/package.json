@@ -1,21 +1,32 @@
 {
   "name": "facetpack-native",
-  "version": "1.0.0",
-  "description": "Template project for writing node package with napi-rs",
+  "version": "0.1.0",
+  "description": "Native bindings for Facetpack - OXC-powered transformer and resolver",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/napi-rs/package-template.git"
+    "url": "git+https://github.com/ecrindigital/facetpack.git",
+    "directory": "packages/facetpack-native"
+  },
+  "homepage": "https://github.com/ecrindigital/facetpack#readme",
+  "bugs": {
+    "url": "https://github.com/ecrindigital/facetpack/issues"
+  },
+  "author": {
+    "name": "Ecrin Digital",
+    "email": "contact@ecrin.digital",
+    "url": "https://ecrin.digital"
   },
   "license": "MIT",
   "browser": "browser.js",
   "keywords": [
+    "oxc",
+    "transformer",
+    "resolver",
+    "react-native",
+    "metro",
     "napi-rs",
-    "NAPI",
-    "N-API",
-    "Rust",
-    "node-addon",
-    "node-addon-api"
+    "rust"
   ],
   "files": [
     "index.d.ts",
@@ -107,5 +118,11 @@
     "singleQuote": true,
     "arrowParens": "always"
   },
-  "packageManager": "yarn@4.12.0"
+  "packageManager": "yarn@4.12.0",
+  "optionalDependencies": {
+    "facetpack-native-win32-x64-msvc": "0.1.0",
+    "facetpack-native-darwin-x64": "0.1.0",
+    "facetpack-native-linux-x64-gnu": "0.1.0",
+    "facetpack-native-darwin-arm64": "0.1.0"
+  }
 }
