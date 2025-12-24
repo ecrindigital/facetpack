@@ -7,8 +7,8 @@ use napi_derive::napi;
 
 pub use domain::types::*;
 
-use cqrs::command::TransformCommand;
-use cqrs::query::{ParseQuery, ResolveBatchQuery, ResolveQuery, ResolveResult, ResolverOptions};
+use cqrs::command::{MinifyCommand, ShakeCommand, TransformCommand};
+use cqrs::query::{AnalyzeBatchQuery, AnalyzeQuery, ParseQuery, ResolveBatchQuery, ResolveQuery, ResolveResult, ResolverOptions};
 use cqrs::traits::{Command, Query};
 
 
@@ -102,4 +102,36 @@ pub fn resolve_batch_sync(
 ) -> Vec<ResolveResult> {
   let query = ResolveBatchQuery::new(directory, specifiers, options);
   query.execute()
+}
+
+#[napi]
+pub fn minify_sync(
+  code: String,
+  filename: String,
+  options: Option<MinifyOptions>,
+) -> napi::Result<MinifyResult> {
+  let command = MinifyCommand::new(code, filename, options);
+  command.execute().map_err(Into::into)
+}
+
+#[napi]
+pub fn analyze_sync(filename: String, source_text: String) -> napi::Result<ModuleAnalysis> {
+  let query = AnalyzeQuery::new(filename, source_text);
+  query.execute().map_err(Into::into)
+}
+
+#[napi]
+pub fn analyze_batch_sync(modules: Vec<ModuleInput>) -> napi::Result<Vec<ModuleAnalysis>> {
+  let query = AnalyzeBatchQuery::new(modules);
+  query.execute().map_err(Into::into)
+}
+
+#[napi]
+pub fn shake_sync(
+  filename: String,
+  source_text: String,
+  used_exports: Vec<String>,
+) -> napi::Result<ShakeResult> {
+  let command = ShakeCommand::new(filename, source_text, used_exports);
+  command.execute().map_err(Into::into)
 }

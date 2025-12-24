@@ -6,7 +6,9 @@
   "scripts": {
     "bench": "bun run.ts",
     "bench:babel": "cd ../expo-babel && rm -rf .expo dist && npx expo export --platform ios --output-dir ./dist",
-    "bench:facetpack": "cd ../expo-facetpack && rm -rf .expo dist && npx expo export --platform ios --output-dir ./dist"
+    "bench:facetpack": "cd ../expo-facetpack && rm -rf .expo dist && npx expo export --platform ios --output-dir ./dist",
+    "dashboard": "bun server.ts",
+    "dev": "bun --hot server.ts"
   },
   "dependencies": {
     "mitata": "^1.0.34",
@@ -14,6 +16,7 @@
     "@babel/preset-react": "^7.24.0",
     "@babel/preset-typescript": "^7.24.0",
     "@ecrindigital/facetpack-native": "workspace:*",
-    "enhanced-resolve": "^5.15.0"
+    "enhanced-resolve": "^5.15.0",
+    "terser": "^5.27.0"
   }
 }

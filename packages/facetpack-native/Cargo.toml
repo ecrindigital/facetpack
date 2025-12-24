@@ -22,6 +22,7 @@ oxc_isolated_declarations = "0.104.0"
 oxc_ast = "0.104.0"
 oxc_semantic = "0.104.0"
 oxc_resolver = "4"
+oxc_minifier = "0.104.0"
 
 thiserror = "1.0"
 

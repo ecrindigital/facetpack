@@ -1,3 +1,11 @@
+export interface MinifierConfig {
+  compress?: boolean
+  mangle?: boolean
+  keep_fnames?: boolean
+  drop_console?: boolean
+  drop_debugger?: boolean
+}
+
 export interface FacetpackOptions {
   jsx?: boolean
   jsxRuntime?: 'automatic' | 'classic'
@@ -6,10 +14,14 @@ export interface FacetpackOptions {
   jsxPragmaFrag?: string
   typescript?: boolean
   sourceExts?: string[]
+  minifier?: boolean | MinifierConfig
+  treeShake?: boolean
 }
 
 export interface MetroTransformerConfig {
   babelTransformerPath?: string
+  minifierPath?: string
+  minifierConfig?: MinifierConfig
   getTransformOptions?: (
     entryPoints: readonly string[],
     options: { dev: boolean; hot: boolean; platform?: string },

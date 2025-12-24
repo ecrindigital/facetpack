@@ -1,0 +1,136 @@
+{
+  "id": "f420d860-a506-408c-80ad-05e7af7b425b",
+  "timestamp": "2025-12-24T17:21:02.276Z",
+  "git": {
+    "commit": "074fa24",
+    "branch": "main"
+  },
+  "environment": {
+    "platform": "darwin arm64",
+    "bun": "1.3.3",
+    "node": "v24.3.0",
+    "cpu": "Apple M3 Max"
+  },
+  "results": [
+    {
+      "name": "Small Component (25 lines)",
+      "category": "transform",
+      "variants": [
+        {
+          "name": "Babel",
+          "mean": 1.7097220799999924,
+          "median": 0.5244579999998678,
+          "min": 0.27491700000064156,
+          "max": 104.8841250000005,
+          "stdDev": 10.387350597977015,
+          "samples": 100
+        },
+        {
+          "name": "Facetpack/OXC",
+          "mean": 0.04097374999998465,
+          "median": 0.015041999999994005,
+          "min": 0.009583000000020547,
+          "max": 1.8202909999999974,
+          "stdDev": 0.17961908977011742,
+          "samples": 100
+        }
+      ]
+    },
+    {
+      "name": "Large Component (80 lines)",
+      "category": "transform",
+      "variants": [
+        {
+          "name": "Babel",
+          "mean": 1.2391345999999976,
+          "median": 1.0495829999999842,
+          "min": 0.662625000000844,
+          "max": 5.255583000000115,
+          "stdDev": 0.8320347596949614,
+          "samples": 100
+        },
+        {
+          "name": "Facetpack/OXC",
+          "mean": 0.0556416900000113,
+          "median": 0.047959000000446395,
+          "min": 0.02658400000018446,
+          "max": 0.19370799999978772,
+          "stdDev": 0.02737821428021462,
+          "samples": 100
+        }
+      ]
+    },
+    {
+      "name": "Minification",
+      "category": "minify",
+      "variants": [
+        {
+          "name": "Terser",
+          "mean": 1.6070282899999893,
+          "median": 1.2690000000002328,
+          "min": 0.800375000000713,
+          "max": 18.60216700000001,
+          "stdDev": 1.839981325883636,
+          "samples": 100
+        },
+        {
+          "name": "Facetpack/OXC",
+          "mean": 0.07746038999996017,
+          "median": 0.06445899999926041,
+          "min": 0.039792000001398264,
+          "max": 0.39679100000012113,
+          "stdDev": 0.04588158010297277,
+          "samples": 100
+        }
+      ]
+    },
+    {
+      "name": "Module Resolution (Cold)",
+      "category": "resolve",
+      "variants": [
+        {
+          "name": "enhanced-resolve",
+          "mean": 1.2209162800000741,
+          "median": 1.1037919999998849,
+          "min": 1.0016670000004524,
+          "max": 7.389040999998542,
+          "stdDev": 0.6575850533508486,
+          "samples": 100
+        },
+        {
+          "name": "Facetpack/OXC",
+          "mean": 0.3118641800000296,
+          "median": 0.3038749999996071,
+          "min": 0.2822919999998703,
+          "max": 0.5410420000007434,
+          "stdDev": 0.032075572035556006,
+          "samples": 100
+        }
+      ]
+    },
+    {
+      "name": "Batch vs Loop Resolution",
+      "category": "resolve",
+      "variants": [
+        {
+          "name": "Loop",
+          "mean": 0.2918770699999186,
+          "median": 0.29029199999968114,
+          "min": 0.28083300000071176,
+          "max": 0.35158400000000256,
+          "stdDev": 0.008201386309897328,
+          "samples": 100
+        },
+        {
+          "name": "Batch API",
+          "mean": 0.15618501999997533,
+          "median": 0.15529199999946286,
+          "min": 0.14745900000161782,
+          "max": 0.16937499999949068,
+          "stdDev": 0.004645727275629597,
+          "samples": 100
+        }
+      ]
+    }
+  ]
+}

@@ -57,6 +57,8 @@ const defaultOptions: Required<FacetpackOptions> = {
   jsxPragmaFrag: 'React.Fragment',
   typescript: true,
   sourceExts: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs'],
+  minifier: true,
+  treeShake: true,
 }
 
 let globalOptions: FacetpackOptions = {}

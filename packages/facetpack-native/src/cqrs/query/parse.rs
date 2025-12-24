@@ -1,8 +1,3 @@
-//! ParseQuery - Query for parsing source code into AST
-//!
-//! This is a pure read operation that takes source code and returns
-//! a structured AST representation.
-
 use crate::cqrs::traits::Query;
 use crate::domain::error::FacetpackError;
 use crate::domain::types::{ParseOptions, ParseResult, SourceType};
@@ -133,7 +128,6 @@ mod tests {
 
   #[test]
   fn test_all_source_types() {
-    // Test Script
     let options = ParseOptions {
       source_type: Some(SourceType::Script),
       preserve_parens: None,

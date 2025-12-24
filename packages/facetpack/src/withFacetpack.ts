@@ -1,6 +1,7 @@
-import type { MetroConfig, FacetpackOptions } from './types'
+import type { MetroConfig, FacetpackOptions, MinifierConfig } from './types'
 import { resolveSync } from '@ecrindigital/facetpack-native'
 import { getCachedResolution } from './cache'
+import { createFacetpackSerializer, type CustomSerializer } from './serializer'
 import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -16,6 +17,20 @@ export function withFacetpack(
   const sourceExts = options.sourceExts ?? DEFAULT_SOURCE_EXTS
   const transformerPath = join(__dirname, 'transformer.js')
 
+  const useMinifier = options.minifier !== false
+  const minifierPath = useMinifier
+    ? join(__dirname, 'minifier.js')
+    : config.transformer?.minifierPath
+  const minifierConfig: MinifierConfig = typeof options.minifier === 'object'
+    ? options.minifier
+    : {}
+
+  const useTreeShake = options.treeShake !== false
+  const existingSerializer = (config as any).serializer?.customSerializer as CustomSerializer | undefined
+  const customSerializer = useTreeShake
+    ? createFacetpackSerializer(existingSerializer, { treeShake: true })
+    : existingSerializer
+
   storeTransformerOptions(options)
 
   return {
@@ -23,6 +38,8 @@ export function withFacetpack(
     transformer: {
       ...config.transformer,
       babelTransformerPath: transformerPath,
+      minifierPath,
+      minifierConfig,
       getTransformOptions: async (
         entryPoints: readonly string[],
         opts: { dev: boolean; hot: boolean; platform?: string },
@@ -82,6 +99,10 @@ export function withFacetpack(
 
         return context.resolveRequest(context, moduleName, platform)
       },
+    },
+    serializer: {
+      ...(config as any).serializer,
+      customSerializer,
     },
   }
 }

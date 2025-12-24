@@ -7,9 +7,53 @@ export declare class FacetPack {
   resolve(directory: string, specifier: string, options?: ResolverOptions | undefined | null): ResolveResult
 }
 
+export declare function analyzeBatchSync(modules: Array<ModuleInput>): Array<ModuleAnalysis>
+
+export declare function analyzeSync(filename: string, sourceText: string): ModuleAnalysis
+
+export interface ExportInfo {
+  name: string
+  isDefault: boolean
+  isReexport: boolean
+  source?: string
+}
+
+export interface ImportInfo {
+  source: string
+  specifiers: Array<string>
+  isSideEffect: boolean
+}
+
 export declare const enum JsxRuntime {
   Automatic = 'Automatic',
   Classic = 'Classic'
+}
+
+export interface MinifyOptions {
+  compress?: boolean
+  mangle?: boolean
+  keepFnames?: boolean
+  dropConsole?: boolean
+  dropDebugger?: boolean
+  sourcemap?: boolean
+}
+
+export interface MinifyResult {
+  code: string
+  map?: string
+}
+
+export declare function minifySync(code: string, filename: string, options?: MinifyOptions | undefined | null): MinifyResult
+
+export interface ModuleAnalysis {
+  exports: Array<ExportInfo>
+  imports: Array<ImportInfo>
+  hasSideEffects: boolean
+}
+
+export interface ModuleInput {
+  path: string
+  code: string
 }
 
 export interface ParseOptions {
@@ -39,6 +83,14 @@ export interface ResolverOptions {
 }
 
 export declare function resolveSync(directory: string, specifier: string, options?: ResolverOptions | undefined | null): ResolveResult
+
+export interface ShakeResult {
+  code: string
+  map?: string
+  removedExports: Array<string>
+}
+
+export declare function shakeSync(filename: string, sourceText: string, usedExports: Array<string>): ShakeResult
 
 export declare const enum SourceType {
   Script = 'Script',

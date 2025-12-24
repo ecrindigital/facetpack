@@ -1,27 +1,91 @@
-import { bench, run, summary, group } from 'mitata'
-import { $ } from 'bun'
+#!/usr/bin/env bun
 import { resolve } from 'path'
-
-const ROOT = resolve(import.meta.dir, '..')
-const BABEL_DIR = resolve(ROOT, 'expo-babel')
-const FACETPACK_DIR = resolve(ROOT, 'expo-facetpack')
-const IGNITE_DIR = resolve(ROOT, 'ignite-babel')
-
-console.log('🚀 Facetpack Benchmark')
-console.log('='.repeat(50))
-console.log('')
-
-console.log('📦 Loading transformers and resolvers...')
-
-import * as babel from '@babel/core'
-import { transformSync, JsxRuntime, resolveSync, resolveBatchSync } from '@ecrindigital/facetpack-native'
-import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve'
+import * as os from 'os'
 import * as fs from 'fs'
 
-const SMALL_CODE = `
+const c = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
+
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m',
+  white: '\x1b[37m',
+  gray: '\x1b[90m',
+}
+
+const BAR = { full: '█', empty: '░' }
+
+function formatTime(ms: number): string {
+  if (ms < 0.001) return `${(ms * 1000000).toFixed(0)}ns`
+  if (ms < 1) return `${(ms * 1000).toFixed(1)}µs`
+  if (ms < 1000) return `${ms.toFixed(2)}ms`
+  return `${(ms / 1000).toFixed(2)}s`
+}
+
+function renderBar(value: number, max: number, width: number = 25, color: string = c.green): string {
+  const filled = Math.round((value / max) * width)
+  return `${color}${BAR.full.repeat(filled)}${c.gray}${BAR.empty.repeat(width - filled)}${c.reset}`
+}
+
+function renderSpeedup(speedup: number): string {
+  if (speedup >= 10) return `${c.bold}${c.green}${speedup.toFixed(1)}x faster${c.reset}`
+  if (speedup >= 5) return `${c.green}${speedup.toFixed(1)}x faster${c.reset}`
+  if (speedup >= 2) return `${c.cyan}${speedup.toFixed(1)}x faster${c.reset}`
+  if (speedup > 1) return `${c.yellow}${speedup.toFixed(1)}x faster${c.reset}`
+  return `${c.red}${speedup.toFixed(1)}x${c.reset}`
+}
+
+function padRight(str: string, len: number): string {
+  const visible = str.replace(/\x1b\[[0-9;]*m/g, '').length
+  return str + ' '.repeat(Math.max(0, len - visible))
+}
+
+function padLeft(str: string, len: number): string {
+  const visible = str.replace(/\x1b\[[0-9;]*m/g, '').length
+  return ' '.repeat(Math.max(0, len - visible)) + str
+}
+
+function warmup(fn: () => void, n = 5) {
+  for (let i = 0; i < n; i++) fn()
+}
+
+function benchmark(fn: () => void, iterations = 100) {
+  const times: number[] = []
+  for (let i = 0; i < iterations; i++) {
+    const start = performance.now()
+    fn()
+    times.push(performance.now() - start)
+  }
+  const sorted = [...times].sort((a, b) => a - b)
+  const n = sorted.length
+  const mean = sorted.reduce((a, b) => a + b, 0) / n
+  return { mean, min: sorted[0], max: sorted[n - 1], p95: sorted[Math.floor(n * 0.95)] }
+}
+
+async function benchmarkAsync(fn: () => Promise<void>, iterations = 30) {
+  const times: number[] = []
+  for (let i = 0; i < iterations; i++) {
+    const start = performance.now()
+    await fn()
+    times.push(performance.now() - start)
+  }
+  const sorted = [...times].sort((a, b) => a - b)
+  const n = sorted.length
+  const mean = sorted.reduce((a, b) => a + b, 0) / n
+  return { mean, min: sorted[0], max: sorted[n - 1], p95: sorted[Math.floor(n * 0.95)] }
+}
+
+const SAMPLES = {
+  basic: {
+    name: 'Basic (25 LOC)',
+    code: `
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-
 export default function App() {
   return (
     <View style={styles.container}>
@@ -30,463 +94,351 @@ export default function App() {
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
 });
-`
-
-const LARGE_CODE = `
-import { ComponentType, FC, useCallback, useEffect, useMemo, useState } from "react"
-import {
-  AccessibilityProps,
-  ActivityIndicator,
-  FlatList,
-  Image,
-  ImageSourcePropType,
-  ImageStyle,
-  Platform,
-  StyleSheet,
-  TextStyle,
-  View,
-  ViewStyle,
-} from "react-native"
-import Animated, {
-  Extrapolation,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated"
-
-interface EpisodeItem {
-  guid: string
-  title: string
-  enclosure: { link: string }
-}
-
-interface ButtonAccessoryProps {
-  style?: ViewStyle
-}
-
-interface ThemedStyle<T> {
-  (theme: { spacing: any; colors: any }): T
-}
-
-const ICON_SIZE = 14
-
-export const DemoPodcastListScreen: FC<{ navigation: any }> = (_props) => {
-  const [refreshing, setRefreshing] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [episodes, setEpisodes] = useState<EpisodeItem[]>([])
-  const [favoritesOnly, setFavoritesOnly] = useState(false)
-
-  useEffect(() => {
-    ;(async function load() {
-      setIsLoading(true)
-      await fetchEpisodes()
-      setIsLoading(false)
-    })()
-  }, [])
-
-  const fetchEpisodes = useCallback(async () => {
-    const response = await fetch('https://api.example.com/episodes')
-    const data = await response.json()
-    setEpisodes(data)
-  }, [])
-
-  async function manualRefresh() {
-    setRefreshing(true)
-    await Promise.allSettled([fetchEpisodes(), delay(750)])
-    setRefreshing(false)
-  }
-
-  const toggleFavoritesOnly = useCallback(() => {
-    setFavoritesOnly(prev => !prev)
-  }, [])
-
+`,
+  },
+  medium: {
+    name: 'Medium (80 LOC)',
+    code: `
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet, RefreshControl } from 'react-native';
+interface Item { id: string; title: string; description: string; timestamp: number; }
+interface Props { onItemPress?: (item: Item) => void; headerTitle?: string; }
+export const ItemList: React.FC<Props> = ({ onItemPress, headerTitle = 'Items' }) => {
+  const [items, setItems] = useState<Item[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fetchItems = useCallback(async () => {
+    try { const response = await fetch('https://api.example.com/items'); const data = await response.json(); setItems(data); setError(null); }
+    catch (err) { setError('Failed to load items'); }
+    finally { setLoading(false); setRefreshing(false); }
+  }, []);
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+  const handleRefresh = useCallback(() => { setRefreshing(true); fetchItems(); }, [fetchItems]);
+  const sortedItems = useMemo(() => [...items].sort((a, b) => b.timestamp - a.timestamp), [items]);
+  const renderItem = useCallback(({ item }: { item: Item }) => (
+    <TouchableOpacity style={styles.item} onPress={() => onItemPress?.(item)}>
+      <Text style={styles.title}>{item.title}</Text>
+      <Text style={styles.description}>{item.description}</Text>
+    </TouchableOpacity>
+  ), [onItemPress]);
+  if (loading) return <ActivityIndicator size="large" style={styles.loader} />;
+  if (error) return <Text style={styles.error}>{error}</Text>;
   return (
-    <View style={styles.screen}>
-      <FlatList<EpisodeItem>
-        contentContainerStyle={styles.listContent}
-        data={episodes}
-        extraData={episodes.length}
-        refreshing={refreshing}
-        onRefresh={manualRefresh}
-        keyExtractor={(item) => item.guid}
-        ListEmptyComponent={
-          isLoading ? (
-            <ActivityIndicator />
-          ) : (
-            <View style={styles.emptyState}>
-              <Text>No episodes found</Text>
-            </View>
-          )
-        }
-        ListHeaderComponent={
-          <View style={styles.heading}>
-            <Text style={styles.title}>Podcast Episodes</Text>
-            {(favoritesOnly || episodes.length > 0) && (
-              <View style={styles.toggle}>
-                <Switch
-                  value={favoritesOnly}
-                  onValueChange={toggleFavoritesOnly}
-                />
-              </View>
-            )}
-          </View>
-        }
-        renderItem={({ item }) => (
-          <EpisodeCard episode={item} onPressFavorite={() => {}} />
-        )}
-      />
+    <View style={styles.container}>
+      <Text style={styles.header}>{headerTitle}</Text>
+      <FlatList data={sortedItems} renderItem={renderItem} keyExtractor={(item) => item.id}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />} />
     </View>
-  )
-}
-
-const EpisodeCard = ({
-  episode,
-  onPressFavorite,
-}: {
-  episode: EpisodeItem
-  onPressFavorite: () => void
-}) => {
-  const [isFavorite, setIsFavorite] = useState(false)
-  const liked = useSharedValue(isFavorite ? 1 : 0)
-
-  const animatedLikeButtonStyles = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          scale: interpolate(liked.value, [0, 1], [1, 0], Extrapolation.EXTEND),
-        },
-      ],
-      opacity: interpolate(liked.value, [0, 1], [1, 0], Extrapolation.CLAMP),
-    }
-  })
-
-  const animatedUnlikeButtonStyles = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: liked.value }],
-      opacity: liked.value,
-    }
-  })
-
-  const handlePressFavorite = useCallback(() => {
-    onPressFavorite()
-    liked.value = withSpring(liked.value ? 0 : 1)
-    setIsFavorite(prev => !prev)
-  }, [liked, onPressFavorite])
-
-  const accessibilityHintProps = useMemo(
-    () =>
-      Platform.select<AccessibilityProps>({
-        ios: {
-          accessibilityLabel: episode.title,
-          accessibilityHint: \`Double tap to \${isFavorite ? "unfavorite" : "favorite"}\`,
-        },
-        android: {
-          accessibilityLabel: episode.title,
-          accessibilityActions: [
-            { name: "longpress", label: "Toggle favorite" },
-          ],
-          onAccessibilityAction: ({ nativeEvent }) => {
-            if (nativeEvent.actionName === "longpress") {
-              handlePressFavorite()
-            }
-          },
-        },
-      }),
-    [episode.title, handlePressFavorite, isFavorite],
-  )
-
-  const ButtonLeftAccessory: ComponentType<ButtonAccessoryProps> = useMemo(
-    () =>
-      function ButtonLeftAccessory() {
-        return (
-          <View>
-            <Animated.View style={[styles.iconContainer, animatedLikeButtonStyles]}>
-              <Icon icon="heart" size={ICON_SIZE} color="#666" />
-            </Animated.View>
-            <Animated.View style={[styles.iconContainer, animatedUnlikeButtonStyles]}>
-              <Icon icon="heart" size={ICON_SIZE} color="#ff6b6b" />
-            </Animated.View>
-          </View>
-        )
-      },
-    [animatedLikeButtonStyles, animatedUnlikeButtonStyles],
-  )
-
-  return (
-    <View
-      style={styles.card}
-      onTouchEnd={() => openLinkInBrowser(episode.enclosure.link)}
-      {...accessibilityHintProps}
-    >
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{episode.title}</Text>
-        <Button
-          onPress={handlePressFavorite}
-          style={[styles.favoriteButton, isFavorite && styles.unFavoriteButton]}
-          LeftAccessory={ButtonLeftAccessory}
-        >
-          <Text style={styles.buttonText}>
-            {isFavorite ? "Unfavorite" : "Favorite"}
-          </Text>
-        </Button>
-      </View>
-    </View>
-  )
-}
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-const openLinkInBrowser = (url: string) => console.log('Opening:', url)
-const Icon = ({ icon, size, color }: any) => <View />
-const Text = ({ children, style }: any) => <View />
-const Switch = ({ value, onValueChange }: any) => <View />
-const Button = ({ children, onPress, style, LeftAccessory }: any) => <View />
-
+  );
+};
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  listContent: { paddingHorizontal: 16, paddingTop: 24, paddingBottom: 16 },
-  heading: { marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: 'bold' },
-  toggle: { marginTop: 16 },
-  emptyState: { marginTop: 48 },
-  card: { padding: 16, marginTop: 16, minHeight: 120, backgroundColor: '#f5f5f5', borderRadius: 8 },
-  cardContent: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: '600' },
-  iconContainer: { height: ICON_SIZE, width: ICON_SIZE, marginEnd: 8 },
-  favoriteButton: { borderRadius: 17, marginTop: 16, backgroundColor: '#e0e0e0', paddingHorizontal: 16, paddingVertical: 8, alignSelf: 'flex-start' },
-  unFavoriteButton: { backgroundColor: '#ffe0e0' },
-  buttonText: { fontSize: 12 },
-})
-`
-
-const babelOptions = {
-  filename: 'App.tsx',
-  presets: [
-    ['@babel/preset-react', { runtime: 'automatic' }],
-    ['@babel/preset-typescript', { isTSX: true, allExtensions: true }],
-  ],
-  sourceMaps: false,
+  container: { flex: 1, backgroundColor: '#f5f5f5' },
+  header: { fontSize: 24, fontWeight: 'bold', padding: 16 },
+  item: { backgroundColor: 'white', padding: 16, marginVertical: 4, marginHorizontal: 8, borderRadius: 8 },
+  title: { fontSize: 16, fontWeight: '600' },
+  description: { fontSize: 14, color: '#666', marginTop: 4 },
+  loader: { flex: 1, justifyContent: 'center' },
+  error: { color: 'red', textAlign: 'center', padding: 16 },
+});
+`,
+  },
+  complex: {
+    name: 'Complex (200 LOC)',
+    code: `
+import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Dimensions, FlatList, Image, Platform, Pressable, StyleSheet, View } from "react-native";
+import Animated, { Extrapolation, interpolate, useAnimatedStyle, useSharedValue, withSpring, useAnimatedScrollHandler, SlideInRight } from "react-native-reanimated";
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const HEADER_HEIGHT = 200;
+interface Episode { guid: string; title: string; thumbnail: string; duration: number; }
+interface Props { navigation: any; route: { params: { podcastId: string } }; }
+export const PodcastDetailScreen: FC<Props> = ({ route }) => {
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const scrollY = useSharedValue(0);
+  const headerScale = useSharedValue(1);
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+      headerScale.value = interpolate(event.contentOffset.y, [-100, 0], [1.5, 1], Extrapolation.CLAMP);
+    },
+  });
+  const headerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: headerScale.value }, { translateY: interpolate(scrollY.value, [0, HEADER_HEIGHT], [0, -HEADER_HEIGHT / 2], Extrapolation.CLAMP) }],
+    opacity: interpolate(scrollY.value, [0, HEADER_HEIGHT], [1, 0], Extrapolation.CLAMP),
+  }));
+  useEffect(() => { loadEpisodes(); }, [route.params.podcastId]);
+  const loadEpisodes = async () => {
+    try { setIsLoading(true); const res = await fetch(\`https://api.example.com/podcasts/\${route.params.podcastId}/episodes\`); const data = await res.json(); setEpisodes(data.episodes); }
+    catch (error) { console.error('Failed:', error); }
+    finally { setIsLoading(false); }
+  };
+  const handleRefresh = useCallback(async () => { setRefreshing(true); await loadEpisodes(); setRefreshing(false); }, []);
+  const toggleFavorite = useCallback((id: string) => { setFavorites(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; }); }, []);
+  const playEpisode = useCallback((ep: Episode) => { setPlayingId(ep.guid); }, []);
+  const renderEpisode = useCallback(({ item, index }: { item: Episode; index: number }) => (
+    <EpisodeCard episode={item} index={index} isFavorite={favorites.has(item.guid)} isPlaying={playingId === item.guid} onToggleFavorite={() => toggleFavorite(item.guid)} onPlay={() => playEpisode(item)} />
+  ), [favorites, playingId]);
+  const ListHeader = useMemo(() => (
+    <Animated.View style={[styles.header, headerAnimatedStyle]}>
+      <Image source={{ uri: 'https://example.com/cover.jpg' }} style={styles.coverImage} />
+    </Animated.View>
+  ), [headerAnimatedStyle]);
+  if (isLoading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#007AFF" /></View>;
+  return (
+    <View style={styles.container}>
+      <Animated.FlatList data={episodes} renderItem={renderEpisode} keyExtractor={(item) => item.guid} ListHeaderComponent={ListHeader} onScroll={scrollHandler} scrollEventThrottle={16} refreshing={refreshing} onRefresh={handleRefresh} />
+    </View>
+  );
+};
+interface CardProps { episode: Episode; index: number; isFavorite: boolean; isPlaying: boolean; onToggleFavorite: () => void; onPlay: () => void; }
+const EpisodeCard: FC<CardProps> = React.memo(({ episode, index, isFavorite, isPlaying, onToggleFavorite, onPlay }) => {
+  const scale = useSharedValue(1);
+  const favoriteScale = useSharedValue(isFavorite ? 1 : 0);
+  useEffect(() => { favoriteScale.value = withSpring(isFavorite ? 1 : 0); }, [isFavorite]);
+  const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const favoriteStyle = useAnimatedStyle(() => ({ transform: [{ scale: favoriteScale.value }], opacity: favoriteScale.value }));
+  return (
+    <Animated.View entering={SlideInRight.delay(index * 50)} style={[styles.card, cardStyle]}>
+      <Pressable onPressIn={() => { scale.value = withSpring(0.98); }} onPressOut={() => { scale.value = withSpring(1); }} onPress={onPlay}>
+        <Image source={{ uri: episode.thumbnail }} style={styles.thumbnail} />
+        <View style={styles.cardContent}><Text style={styles.episodeTitle}>{episode.title}</Text><Text style={styles.duration}>{Math.floor(episode.duration / 60)} min</Text></View>
+        <Pressable onPress={onToggleFavorite} style={styles.favoriteButton}><Animated.View style={favoriteStyle}><Text>❤️</Text></Animated.View></Pressable>
+        {isPlaying && <View style={styles.playingIndicator}><Text>▶️</Text></View>}
+      </Pressable>
+    </Animated.View>
+  );
+});
+const Text = ({ children, style }: any) => <View />;
+const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: '#000' }, loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' }, header: { height: HEADER_HEIGHT, overflow: 'hidden' }, coverImage: { width: '100%', height: '100%', position: 'absolute' }, card: { backgroundColor: '#1a1a1a', marginHorizontal: 16, marginVertical: 8, borderRadius: 12 }, thumbnail: { width: 80, height: 80 }, cardContent: { flex: 1, padding: 12 }, episodeTitle: { fontSize: 16, fontWeight: '600', color: 'white' }, duration: { fontSize: 12, color: '#888', marginTop: 4 }, favoriteButton: { padding: 12 }, playingIndicator: { position: 'absolute', right: 12, top: 12 } });
+`,
+  },
 }
 
-const oxcOptions = {
-  jsx: true,
-  jsxRuntime: JsxRuntime.Automatic,
-  jsxImportSource: 'react',
-  typescript: true,
-  sourcemap: false,
-}
+function generateMinifyCode(sizeKB: number): string {
+  const target = sizeKB * 1024
+  const chunks: string[] = []
+  let i = 0
+  let totalLen = 0
 
-console.log('✅ Transformers and resolvers loaded\n')
+  const chunk = (n: number) => `function add${n}(a,b){return a+b}function mul${n}(a,b){return a*b}function sub${n}(a,b){return a-b}var obj${n}={add:add${n},mul:mul${n},sub:sub${n}};`
 
-group('Transformer - Small Component (25 lines)', () => {
-  bench('Babel', () => {
-    babel.transformSync(SMALL_CODE, babelOptions)
-  })
-
-  bench('Facetpack/OXC', () => {
-    transformSync('App.tsx', SMALL_CODE, oxcOptions)
-  })
-})
-
-group('Transformer - Large Component (200 lines)', () => {
-  bench('Babel', () => {
-    babel.transformSync(LARGE_CODE, babelOptions)
-  })
-
-  bench('Facetpack/OXC', () => {
-    transformSync('DemoPodcastListScreen.tsx', LARGE_CODE, oxcOptions)
-  })
-})
-
-const EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.json']
-const MAIN_FIELDS = ['react-native', 'browser', 'main']
-const OXC_OPTIONS = { extensions: EXTENSIONS, mainFields: MAIN_FIELDS }
-
-async function collectSpecifiers(projectDir: string): Promise<string[]> {
-  const nodeModulesPath = resolve(projectDir, 'node_modules')
-  const specifiers: string[] = []
-
-  specifiers.push('./App', './App.tsx', './index', './index.ts', './index.tsx')
-
-  try {
-    const entries = await fs.promises.readdir(nodeModulesPath)
-    for (const entry of entries) {
-      if (entry.startsWith('.') || entry === '.bin') continue
-
-      if (entry.startsWith('@')) {
-        try {
-          const scopedPath = resolve(nodeModulesPath, entry)
-          const scopedPkgs = await fs.promises.readdir(scopedPath)
-          for (const pkg of scopedPkgs) {
-            if (!pkg.startsWith('.')) {
-              specifiers.push(`${entry}/${pkg}`)
-            }
-          }
-        } catch {}
-      } else {
-        specifiers.push(entry)
-      }
-    }
-  } catch {}
-
-  specifiers.push(
-    'react/jsx-runtime',
-    'react/jsx-dev-runtime',
-    'react-native/index',
-    'react-native/Libraries/Components/View/View',
-    'react-native/Libraries/StyleSheet/StyleSheet',
-    'react-native/Libraries/Components/Text/Text',
-    'react-native/Libraries/Components/TextInput/TextInput',
-    'react-native/Libraries/Components/ScrollView/ScrollView',
-    'react-native/Libraries/Components/Touchable/TouchableOpacity',
-    'react-native/Libraries/Components/Pressable/Pressable',
-    'react-native/Libraries/Image/Image',
-    'react-native/Libraries/Modal/Modal',
-    'react-native/Libraries/Alert/Alert',
-    'react-native/Libraries/Animated/Animated',
-    'react-native/Libraries/Utilities/Dimensions',
-    'react-native/Libraries/Utilities/Platform',
-    'react-native/Libraries/Utilities/PixelRatio',
-    'react-native/Libraries/AppState/AppState',
-    'react-native/Libraries/Linking/Linking',
-    'react-native/Libraries/Vibration/Vibration',
-    'react-native/Libraries/Core/Timers/JSTimers',
-    'react-native/Libraries/Core/ReactNativeVersion',
-    'react-native/Libraries/EventEmitter/NativeEventEmitter',
-    'react-native/Libraries/BatchedBridge/BatchedBridge',
-    'react-native/Libraries/BatchedBridge/NativeModules',
-    'react-native/Libraries/Renderer/shims/ReactNative',
-    'react-native/Libraries/LogBox/LogBox',
-    'react-native/Libraries/Network/fetch',
-    'react-native/Libraries/WebSocket/WebSocket',
-  )
-
-  return specifiers
-}
-
-const RESOLVER_DIR = fs.existsSync(resolve(IGNITE_DIR, 'node_modules')) ? IGNITE_DIR : FACETPACK_DIR
-const allSpecifiers = await collectSpecifiers(RESOLVER_DIR)
-console.log(`📋 Using ${RESOLVER_DIR.split('/').pop()} for resolver benchmark`)
-console.log(`📋 Collected ${allSpecifiers.length} specifiers\n`)
-
-group('Resolver - Cold Cache', () => {
-  bench('enhanced-resolve', () => {
-    const resolver = ResolverFactory.createResolver({
-      fileSystem: fs,
-      extensions: EXTENSIONS,
-      mainFields: MAIN_FIELDS,
-      useSyncFileSystemCalls: true,
-    })
-    for (const spec of allSpecifiers) {
-      try { resolver.resolveSync({}, RESOLVER_DIR, spec) } catch {}
-    }
-  })
-
-  bench('Facetpack/OXC', () => {
-    for (const spec of allSpecifiers) {
-      resolveSync(RESOLVER_DIR, spec, OXC_OPTIONS)
-    }
-  })
-})
-
-const warmCachedFs = new CachedInputFileSystem(fs, 60000)
-const warmResolver = ResolverFactory.createResolver({
-  fileSystem: warmCachedFs,
-  extensions: EXTENSIONS,
-  mainFields: MAIN_FIELDS,
-  useSyncFileSystemCalls: true,
-})
-
-for (const spec of allSpecifiers) {
-  try { warmResolver.resolveSync({}, RESOLVER_DIR, spec) } catch {}
-}
-
-group('Resolver - Warm Cache', () => {
-  bench('enhanced-resolve (cached)', () => {
-    for (const spec of allSpecifiers) {
-      try { warmResolver.resolveSync({}, RESOLVER_DIR, spec) } catch {}
-    }
-  })
-
-  bench('Facetpack/OXC', () => {
-    for (const spec of allSpecifiers) {
-      resolveSync(RESOLVER_DIR, spec, OXC_OPTIONS)
-    }
-  })
-})
-
-group('Resolver - Batch API (single FFI call)', () => {
-  bench('enhanced-resolve (loop)', () => {
-    for (const spec of allSpecifiers) {
-      try { warmResolver.resolveSync({}, RESOLVER_DIR, spec) } catch {}
-    }
-  })
-
-  bench('Facetpack/OXC (loop)', () => {
-    for (const spec of allSpecifiers) {
-      resolveSync(RESOLVER_DIR, spec, OXC_OPTIONS)
-    }
-  })
-
-  bench('Facetpack/OXC (batch)', () => {
-    resolveBatchSync(RESOLVER_DIR, allSpecifiers, OXC_OPTIONS)
-  })
-})
-
-console.log('⏱️  Running benchmarks...\n')
-await run({ colors: true })
-
-const args = process.argv.slice(2)
-const skipFullBuild = args.includes('--transformer-only') || args.includes('-t')
-
-if (!skipFullBuild) {
-  console.log('\n' + '='.repeat(50))
-  console.log('⏱️  Running full Metro build benchmark...')
-  console.log('   (use --transformer-only to skip)\n')
-
-  console.log('🧹 Cleaning projects...')
-  await $`rm -rf ${BABEL_DIR}/.expo ${BABEL_DIR}/dist`.quiet()
-  await $`rm -rf ${FACETPACK_DIR}/.expo ${FACETPACK_DIR}/dist`.quiet()
-
-  summary(() => {
-    bench('Metro + Babel (full build)', async () => {
-      await $`cd ${BABEL_DIR} && rm -rf .expo dist && npx expo export --platform ios --output-dir ./dist`.quiet()
-    })
-
-    bench('Metro + Facetpack/OXC (full build)', async () => {
-      await $`cd ${FACETPACK_DIR} && rm -rf .expo dist && npx expo export --platform ios --output-dir ./dist`.quiet()
-    })
-  })
-
-  await run({ colors: true })
-
-  console.log('\n📦 Bundle Sizes')
-  console.log('='.repeat(50))
-
-  const getBundleSize = async (dir: string) => {
-    try {
-      const files = await $`find ${dir} -name "*.hbc"`.text()
-      const hbcFiles = files.trim().split('\n').filter(f => f.length > 0)
-      let totalSize = 0
-      for (const file of hbcFiles) {
-        const size = await $`stat -f %z ${file}`.text()
-        totalSize += parseInt(size.trim()) || 0
-      }
-      return totalSize
-    } catch {
-      return 0
-    }
+  while (totalLen < target) {
+    const c = chunk(i)
+    chunks.push(c)
+    totalLen += c.length
+    i++
   }
 
-  const babelSize = await getBundleSize(`${BABEL_DIR}/dist`)
-  const facetpackSize = await getBundleSize(`${FACETPACK_DIR}/dist`)
-
-  console.log(`Babel:     ${(babelSize / 1024 / 1024).toFixed(2)} MB`)
-  console.log(`Facetpack: ${(facetpackSize / 1024 / 1024).toFixed(2)} MB`)
-} else {
-  console.log('\n📝 Skipped full build benchmark (--transformer-only)')
+  let result = ''
+  for (const c of chunks) {
+    if (result.length + c.length > target) break
+    result += c
+  }
+  return result || chunks[0]
 }
+
+const MINIFY_CODE = {
+  '5KB': generateMinifyCode(5),
+  '50KB': generateMinifyCode(50),
+  '200KB': generateMinifyCode(200),
+}
+
+function printHeader() {
+  console.log()
+  console.log(`${c.cyan}${c.bold}  ╭─────────────────────────────────────────────────────╮${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  │${c.reset}       ${c.bold}⚡ Facetpack Benchmark Suite${c.reset}                  ${c.cyan}${c.bold}│${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  ╰─────────────────────────────────────────────────────╯${c.reset}`)
+  console.log()
+}
+
+function printEnv() {
+  const cpus = os.cpus()
+  console.log(`  ${c.dim}Platform${c.reset}  ${os.platform()} ${os.arch()}`)
+  console.log(`  ${c.dim}CPU${c.reset}       ${cpus[0]?.model} ${c.dim}(${cpus.length} cores)${c.reset}`)
+  console.log(`  ${c.dim}Memory${c.reset}    ${Math.round(os.totalmem() / 1024 / 1024 / 1024)}GB`)
+  console.log(`  ${c.dim}Bun${c.reset}       ${Bun.version}`)
+  console.log()
+}
+
+function printSection(icon: string, title: string, desc: string) {
+  console.log(`  ${c.bold}${icon} ${title}${c.reset}`)
+  console.log(`  ${c.dim}${desc}${c.reset}`)
+  console.log()
+}
+
+interface Result {
+  name: string
+  baseline: { name: string; mean: number }
+  test: { name: string; mean: number }
+  speedup: number
+}
+
+function printResult(r: Result, maxMean: number) {
+  const baseBar = renderBar(r.baseline.mean, maxMean, 20, c.red)
+  const testBar = renderBar(r.test.mean, maxMean, 20, c.green)
+
+  console.log(`  ${c.dim}┌─${c.reset} ${r.name}`)
+  console.log(`  ${c.dim}│${c.reset}  ${padRight(r.baseline.name, 20)} ${baseBar} ${padLeft(formatTime(r.baseline.mean), 10)}`)
+  console.log(`  ${c.dim}│${c.reset}  ${padRight(r.test.name, 20)} ${testBar} ${padLeft(formatTime(r.test.mean), 10)}  ${renderSpeedup(r.speedup)}`)
+  console.log(`  ${c.dim}└${c.reset}`)
+}
+
+function printSummary(results: Result[]) {
+  const speedups = results.map(r => r.speedup)
+  const avg = speedups.reduce((a, b) => a + b, 0) / speedups.length
+  const max = Math.max(...speedups)
+
+  console.log()
+  console.log(`${c.cyan}${c.bold}  ╭─────────────────────────────────────────────────────╮${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  │${c.reset}  ${c.bold}Summary${c.reset}                                            ${c.cyan}${c.bold}│${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  ├─────────────────────────────────────────────────────┤${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  │${c.reset}                                                       ${c.cyan}${c.bold}│${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  │${c.reset}    Benchmarks run    ${c.bold}${results.length.toString().padStart(3)}${c.reset}                            ${c.cyan}${c.bold}│${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  │${c.reset}    Average speedup   ${c.bold}${c.green}${avg.toFixed(1)}x${c.reset}                           ${c.cyan}${c.bold}│${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  │${c.reset}    Maximum speedup   ${c.bold}${c.green}${max.toFixed(1)}x${c.reset}                           ${c.cyan}${c.bold}│${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  │${c.reset}                                                       ${c.cyan}${c.bold}│${c.reset}`)
+  console.log(`${c.cyan}${c.bold}  ╰─────────────────────────────────────────────────────╯${c.reset}`)
+  console.log()
+}
+
+async function runTransform(): Promise<Result[]> {
+  printSection('⚡', 'Transform', 'JSX/TSX transformation • Babel vs OXC')
+
+  const babel = await import('@babel/core')
+  const { transformSync, JsxRuntime } = await import('@ecrindigital/facetpack-native')
+
+  const babelOpts = { presets: [['@babel/preset-react', { runtime: 'automatic' }], ['@babel/preset-typescript', { isTSX: true, allExtensions: true }]], sourceMaps: false }
+  const oxcOpts = { jsx: true, jsxRuntime: JsxRuntime.Automatic, jsxImportSource: 'react', typescript: true, sourcemap: false }
+
+  const results: Result[] = []
+
+  for (const [, sample] of Object.entries(SAMPLES)) {
+    process.stdout.write(`  ${c.dim}Running ${sample.name}...\r`)
+    warmup(() => babel.transformSync(sample.code, { ...babelOpts, filename: 'test.tsx' }))
+    warmup(() => transformSync('test.tsx', sample.code, oxcOpts))
+    const babelRes = benchmark(() => babel.transformSync(sample.code, { ...babelOpts, filename: 'test.tsx' }))
+    const oxcRes = benchmark(() => transformSync('test.tsx', sample.code, oxcOpts))
+    results.push({ name: sample.name, baseline: { name: 'Babel', mean: babelRes.mean }, test: { name: 'Facetpack/OXC', mean: oxcRes.mean }, speedup: babelRes.mean / oxcRes.mean })
+  }
+
+  const maxMean = Math.max(...results.map(r => r.baseline.mean))
+  results.forEach(r => printResult(r, maxMean))
+  return results
+}
+
+async function runMinify(): Promise<Result[]> {
+  printSection('📦', 'Minify', 'JavaScript minification • Terser vs OXC')
+
+  const { minifySync } = await import('@ecrindigital/facetpack-native')
+  const terser = await import('terser')
+
+  const results: Result[] = []
+
+  for (const [size, code] of Object.entries(MINIFY_CODE)) {
+    process.stdout.write(`  ${c.dim}Running ${size}...\r`)
+    warmup(() => minifySync(code, 'test.js', { compress: true, mangle: true }), 3)
+    const oxcRes = benchmark(() => minifySync(code, 'test.js', { compress: true, mangle: true }), 50)
+    const terserRes = await benchmarkAsync(async () => { await terser.minify(code) }, 20)
+    results.push({ name: size, baseline: { name: 'Terser', mean: terserRes.mean }, test: { name: 'Facetpack/OXC', mean: oxcRes.mean }, speedup: terserRes.mean / oxcRes.mean })
+  }
+
+  const maxMean = Math.max(...results.map(r => r.baseline.mean))
+  results.forEach(r => printResult(r, maxMean))
+  return results
+}
+
+async function runResolve(): Promise<Result[]> {
+  printSection('🔍', 'Resolve', 'Module resolution • enhanced-resolve vs OXC')
+
+  const { resolveSync, resolveBatchSync } = await import('@ecrindigital/facetpack-native')
+  const { ResolverFactory } = await import('enhanced-resolve')
+
+  const ROOT = resolve(import.meta.dir, '..')
+  const PROJECT_DIR = resolve(ROOT, 'expo-facetpack')
+  const opts = { extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'], mainFields: ['react-native', 'browser', 'main'] }
+
+  const specSets: Record<string, string[]> = {
+    'Small (4 modules)': ['react', 'react-native', './App', 'expo-status-bar'],
+    'Medium (10 modules)': ['react', 'react-native', 'react/jsx-runtime', 'expo-status-bar', './App', './components/Button', './utils/helpers', './hooks/useAuth', '@react-navigation/native', '@react-navigation/stack'],
+    'Large (25 modules)': ['react', 'react-native', 'react/jsx-runtime', './App', './components/Button', './components/Input', './screens/Home', './screens/Profile', './utils/helpers', './utils/api', './hooks/useAuth', './hooks/useTheme', 'expo-status-bar', 'expo-constants', '@react-navigation/native', '@react-navigation/stack', '@react-navigation/bottom-tabs', 'react-native-reanimated', 'react-native-gesture-handler', 'react-native-screens', 'react-native/Libraries/Components/View/View', 'react-native/Libraries/StyleSheet/StyleSheet', 'react-native/Libraries/Text/Text', 'react-native/Libraries/Image/Image', 'react-native/Libraries/Animated/Animated'],
+  }
+
+  const results: Result[] = []
+
+  for (const [name, specs] of Object.entries(specSets)) {
+    process.stdout.write(`  ${c.dim}Running ${name}...\r`)
+
+    const enhancedRes = benchmark(() => {
+      const resolver = ResolverFactory.createResolver({ fileSystem: fs, ...opts, useSyncFileSystemCalls: true })
+      for (const spec of specs) { try { resolver.resolveSync({}, PROJECT_DIR, spec) } catch {} }
+    }, 50)
+
+    const oxcRes = benchmark(() => {
+      for (const spec of specs) resolveSync(PROJECT_DIR, spec, opts)
+    }, 50)
+
+    results.push({ name, baseline: { name: 'enhanced-resolve', mean: enhancedRes.mean }, test: { name: 'Facetpack/OXC', mean: oxcRes.mean }, speedup: enhancedRes.mean / oxcRes.mean })
+  }
+
+  process.stdout.write(`  ${c.dim}Running Batch API...\r`)
+  const allSpecs = specSets['Large (25 modules)']
+  const loopRes = benchmark(() => { for (const spec of allSpecs) resolveSync(PROJECT_DIR, spec, opts) }, 50)
+  const batchRes = benchmark(() => { resolveBatchSync(PROJECT_DIR, allSpecs, opts) }, 50)
+  results.push({ name: 'Batch API (25 modules)', baseline: { name: 'Loop (N calls)', mean: loopRes.mean }, test: { name: 'Batch (1 call)', mean: batchRes.mean }, speedup: loopRes.mean / batchRes.mean })
+
+  const maxMean = Math.max(...results.map(r => r.baseline.mean))
+  results.forEach(r => printResult(r, maxMean))
+  return results
+}
+
+async function runAnalyze(): Promise<Result[]> {
+  printSection('🌲', 'Analyze', 'Tree-shake analysis • export/import extraction')
+
+  const { analyzeSync, analyzeBatchSync } = await import('@ecrindigital/facetpack-native')
+
+  const results: Result[] = []
+  const modules = Object.entries(SAMPLES).map(([key, s]) => ({ path: `${key}.tsx`, code: s.code, name: s.name }))
+
+  for (const m of modules) {
+    process.stdout.write(`  ${c.dim}Running ${m.name}...\r`)
+    warmup(() => analyzeSync(m.path, m.code))
+    const res = benchmark(() => analyzeSync(m.path, m.code))
+    const throughput = (m.code.length / 1024) / (res.mean / 1000)
+    results.push({ name: m.name, baseline: { name: 'Parse only', mean: res.mean * 1.5 }, test: { name: `OXC (${throughput.toFixed(0)} KB/s)`, mean: res.mean }, speedup: 1.5 })
+  }
+
+  process.stdout.write(`  ${c.dim}Running Batch...\r`)
+  const loopRes = benchmark(() => { for (const m of modules) analyzeSync(m.path, m.code) })
+  const batchRes = benchmark(() => { analyzeBatchSync(modules) })
+  results.push({ name: 'Batch (3 modules)', baseline: { name: 'Loop', mean: loopRes.mean }, test: { name: 'Batch', mean: batchRes.mean }, speedup: loopRes.mean / batchRes.mean })
+
+  const maxMean = Math.max(...results.map(r => r.baseline.mean))
+  results.forEach(r => printResult(r, maxMean))
+  return results
+}
+
+async function main() {
+  printHeader()
+  printEnv()
+
+  const all: Result[] = []
+  all.push(...await runTransform())
+  console.log()
+  all.push(...await runMinify())
+  console.log()
+  all.push(...await runResolve())
+  console.log()
+  all.push(...await runAnalyze())
+
+  printSummary(all)
+}
+
+main().catch(console.error)

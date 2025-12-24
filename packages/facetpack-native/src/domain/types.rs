@@ -54,3 +54,61 @@ pub struct TransformResult {
   pub map: Option<String>,
   pub errors: Vec<String>,
 }
+
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct MinifyOptions {
+  pub compress: Option<bool>,
+  pub mangle: Option<bool>,
+  pub keep_fnames: Option<bool>,
+  pub drop_console: Option<bool>,
+  pub drop_debugger: Option<bool>,
+  pub sourcemap: Option<bool>,
+}
+
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct MinifyResult {
+  pub code: String,
+  pub map: Option<String>,
+}
+
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct ExportInfo {
+  pub name: String,
+  pub is_default: bool,
+  pub is_reexport: bool,
+  pub source: Option<String>,
+}
+
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct ImportInfo {
+  pub source: String,
+  pub specifiers: Vec<String>,
+  pub is_side_effect: bool,
+}
+
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct ModuleAnalysis {
+  pub exports: Vec<ExportInfo>,
+  pub imports: Vec<ImportInfo>,
+  pub has_side_effects: bool,
+}
+
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct ModuleInput {
+  pub path: String,
+  pub code: String,
+}
+
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct ShakeResult {
+  pub code: String,
+  pub map: Option<String>,
+  pub removed_exports: Vec<String>,
+}
