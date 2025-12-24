@@ -6,6 +6,10 @@
     "packages/*",
     "examples/*"
   ],
+  "scripts": {
+    "test:all": "bun run --filter './packages/*' test",
+    "build:all": "bun run --filter './packages/*' build"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
