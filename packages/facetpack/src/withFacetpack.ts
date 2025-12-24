@@ -3,10 +3,30 @@ import { resolveSync } from '@ecrindigital/facetpack-native'
 import { getCachedResolution } from './cache'
 import { createFacetpackSerializer, type CustomSerializer } from './serializer'
 import { createRequire } from 'module'
+import { join } from 'path'
 
 const DEFAULT_SOURCE_EXTS = ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs']
 
 const require = createRequire(import.meta.url)
+
+function findFallbackTransformer(projectRoot: string): string | undefined {
+  const projectRequire = createRequire(join(projectRoot, 'package.json'))
+
+  const transformerPaths = [
+    '@expo/metro-config/babel-transformer',
+    '@react-native/metro-babel-transformer',
+    'metro-react-native-babel-transformer',
+  ]
+
+  for (const transformerPath of transformerPaths) {
+    try {
+      return projectRequire.resolve(transformerPath)
+    } catch {
+    }
+  }
+
+  return undefined
+}
 
 export function withFacetpack(
   config: MetroConfig,
@@ -29,7 +49,11 @@ export function withFacetpack(
     ? createFacetpackSerializer(existingSerializer, { treeShake: true })
     : existingSerializer
 
-  storeTransformerOptions(options)
+  const projectRoot = (config as any).projectRoot || process.cwd()
+  const originalTransformerPath = config.transformer?.babelTransformerPath
+  const fallbackTransformerPath = originalTransformerPath || findFallbackTransformer(projectRoot)
+
+  storeTransformerOptions(options, fallbackTransformerPath)
 
   return {
     ...config,
@@ -105,8 +129,11 @@ export function withFacetpack(
   }
 }
 
-function storeTransformerOptions(options: FacetpackOptions): void {
+function storeTransformerOptions(options: FacetpackOptions, fallbackTransformerPath?: string): void {
   process.env.FACETPACK_OPTIONS = JSON.stringify(options)
+  if (fallbackTransformerPath) {
+    process.env.FACETPACK_FALLBACK_TRANSFORMER = fallbackTransformerPath
+  }
 }
 
 export function getStoredOptions(): FacetpackOptions {

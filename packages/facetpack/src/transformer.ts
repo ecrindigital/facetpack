@@ -70,17 +70,13 @@ function getFallbackTransformer(): { transform: (params: TransformParams) => Tra
     return fallbackTransformer
   }
 
-  const transformerPaths = [
-    '@expo/metro-config/babel-transformer',
-    '@react-native/metro-babel-transformer',
-    'metro-react-native-babel-transformer',
-  ]
-
-  for (const transformerPath of transformerPaths) {
+  const fallbackPath = process.env.FACETPACK_FALLBACK_TRANSFORMER
+  if (fallbackPath) {
     try {
-      fallbackTransformer = require(transformerPath)
+      fallbackTransformer = require(fallbackPath)
       return fallbackTransformer!
-    } catch {
+    } catch (e) {
+      console.warn(`[Facetpack] Failed to load fallback transformer from ${fallbackPath}:`, e)
     }
   }
 
