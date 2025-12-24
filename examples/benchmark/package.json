@@ -13,7 +13,7 @@
     "@babel/core": "^7.24.0",
     "@babel/preset-react": "^7.24.0",
     "@babel/preset-typescript": "^7.24.0",
-    "facetpack-native": "workspace:*",
+    "@ecrindigital/facetpack-native": "workspace:*",
     "enhanced-resolve": "^5.15.0"
   }
 }

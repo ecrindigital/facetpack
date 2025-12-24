@@ -1,6 +1,6 @@
 {
-  "name": "facetpack",
-  "version": "0.1.0",
+  "name": "@ecrindigital/facetpack",
+  "version": "0.1.1",
   "description": "High-performance Metro transformer powered by OXC",
   "type": "module",
   "main": "dist/index.js",
@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.24.0",
-    "facetpack-native": "workspace:*"
+    "@ecrindigital/facetpack-native": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22",
@@ -60,8 +60,8 @@
     "typescript": "^5.7.0"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts ./src/transformer.ts --outdir ./dist --target node --format esm --external facetpack-native --external @babel/parser && bun run build:cjs && bun run build:types",
-    "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --external facetpack-native --external @babel/parser && bun build ./src/transformer.ts --outfile ./dist/transformer.cjs --target node --format cjs --external facetpack-native --external @babel/parser",
+    "build": "bun build ./src/index.ts ./src/transformer.ts --outdir ./dist --target node --format esm --external @ecrindigital/facetpack-native --external @babel/parser && bun run build:cjs && bun run build:types",
+    "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --external @ecrindigital/facetpack-native --external @babel/parser && bun build ./src/transformer.ts --outfile ./dist/transformer.cjs --target node --format cjs --external @ecrindigital/facetpack-native --external @babel/parser",
     "build:types": "bunx tsc",
     "dev": "bun build ./src/index.ts --outdir ./dist --target node --watch",
     "typecheck": "tsc --noEmit",

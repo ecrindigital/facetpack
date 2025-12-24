@@ -14,7 +14,7 @@ console.log('')
 console.log('📦 Loading transformers and resolvers...')
 
 import * as babel from '@babel/core'
-import { transformSync, JsxRuntime, resolveSync, resolveBatchSync } from 'facetpack-native'
+import { transformSync, JsxRuntime, resolveSync, resolveBatchSync } from '@ecrindigital/facetpack-native'
 import { ResolverFactory, CachedInputFileSystem } from 'enhanced-resolve'
 import * as fs from 'fs'
 

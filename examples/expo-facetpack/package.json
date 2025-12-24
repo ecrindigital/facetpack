@@ -11,8 +11,8 @@
   "dependencies": {
     "expo": "~54.0.30",
     "expo-status-bar": "~3.0.9",
-    "facetpack": "workspace:*",
-    "facetpack-native": "workspace:*",
+    "@ecrindigital/facetpack": "workspace:*",
+    "@ecrindigital/facetpack-native": "workspace:*",
     "react": "19.1.0",
     "react-native": "0.81.5"
   },

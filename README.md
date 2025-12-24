@@ -25,9 +25,9 @@ Tested on Apple M3 Max, Bun 1.3.3
 ## Installation
 
 ```bash
-bun add facetpack
+bun add @ecrindigital/facetpack
 # or
-npm install facetpack
+npm install @ecrindigital/facetpack
 ```
 
 ## Usage
@@ -37,7 +37,7 @@ Wrap your Metro config with `withFacetpack`:
 ```js
 // metro.config.js
 const { getDefaultConfig } = require('expo/metro-config')
-const { withFacetpack } = require('facetpack')
+const { withFacetpack } = require('@ecrindigital/facetpack')
 
 const config = getDefaultConfig(__dirname)
 

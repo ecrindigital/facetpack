@@ -1,5 +1,5 @@
 const { getDefaultConfig } = require('expo/metro-config')
-const { withFacetpack } = require('facetpack')
+const { withFacetpack } = require('@ecrindigital/facetpack')
 const path = require('path')
 
 const projectRoot = __dirname

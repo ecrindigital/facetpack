@@ -1,4 +1,4 @@
-import { resolveSync, type ResolverOptions } from 'facetpack-native'
+import { resolveSync, type ResolverOptions } from '@ecrindigital/facetpack-native'
 
 export { resolveSync, type ResolverOptions }
 

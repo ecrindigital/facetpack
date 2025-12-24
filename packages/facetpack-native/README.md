@@ -5,17 +5,17 @@ Native Rust bindings for [Facetpack](https://github.com/ecrindigital/facetpack) 
 ## Installation
 
 ```bash
-npm install facetpack-native
+npm install @ecrindigital/facetpack-native
 ```
 
-This package is typically used as a dependency of `facetpack`. You don't need to install it directly.
+This package is typically used as a dependency of `@ecrindigital/facetpack`. You don't need to install it directly.
 
 ## API
 
 ### Transform
 
 ```ts
-import { transformSync, JsxRuntime } from 'facetpack-native'
+import { transformSync, JsxRuntime } from '@ecrindigital/facetpack-native'
 
 const result = transformSync('App.tsx', code, {
   jsx: true,
@@ -33,7 +33,7 @@ console.log(result.errors)
 ### Parse
 
 ```ts
-import { parseSync, SourceType } from 'facetpack-native'
+import { parseSync, SourceType } from '@ecrindigital/facetpack-native'
 
 const result = parseSync('App.tsx', code, {
   sourceType: SourceType.Tsx,
@@ -46,7 +46,7 @@ console.log(result.errors)
 ### Resolve
 
 ```ts
-import { resolveSync, resolveBatchSync } from 'facetpack-native'
+import { resolveSync, resolveBatchSync } from '@ecrindigital/facetpack-native'
 
 const result = resolveSync('/project/src', 'react', {
   extensions: ['.ts', '.tsx', '.js', '.jsx'],

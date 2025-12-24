@@ -1,15 +1,20 @@
 import type { MetroConfig, FacetpackOptions } from './types'
-import { resolveSync } from 'facetpack-native'
+import { resolveSync } from '@ecrindigital/facetpack-native'
 import { getCachedResolution } from './cache'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 
 const DEFAULT_SOURCE_EXTS = ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs']
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 export function withFacetpack(
   config: MetroConfig,
   options: FacetpackOptions = {}
 ): MetroConfig {
   const sourceExts = options.sourceExts ?? DEFAULT_SOURCE_EXTS
-  const transformerPath = require.resolve('facetpack/transformer')
+  const transformerPath = join(__dirname, 'transformer.js')
 
   storeTransformerOptions(options)
 

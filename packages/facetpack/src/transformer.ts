@@ -1,4 +1,4 @@
-import { transformSync, JsxRuntime, resolveBatchSync } from 'facetpack-native'
+import { transformSync, JsxRuntime, resolveBatchSync } from '@ecrindigital/facetpack-native'
 import { parse } from '@babel/parser'
 import type { TransformParams, TransformResult, FacetpackOptions } from './types'
 import { setCachedResolutions } from './cache'
