@@ -1,53 +1,69 @@
-# Facetpack
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ecrindigital/facetpack/main/assets/social-preview.jpg" alt="Facetpack" width="100%" />
+</p>
 
-High-performance Metro transformer and resolver for React Native, powered by [OXC](https://oxc.rs) (Oxidation Compiler).
+<p align="center">
+  <b>⚡ 36x faster Metro transforms for React Native</b><br/>
+  <sub>Rust-powered. Drop-in Babel replacement.</sub>
+</p>
 
-Drop-in replacement for Babel that transforms TypeScript/JSX **31-38x faster**.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@ecrindigital/facetpack">
+    <img src="https://img.shields.io/npm/v/@ecrindigital/facetpack.svg" alt="npm version" />
+  </a>
+  <a href="https://www.npmjs.com/package/@ecrindigital/facetpack">
+    <img src="https://img.shields.io/npm/dm/@ecrindigital/facetpack.svg" alt="npm downloads" />
+  </a>
+  <a href="https://github.com/ecrindigital/facetpack/stargazers">
+    <img src="https://img.shields.io/github/stars/ecrindigital/facetpack.svg?style=social" alt="GitHub stars" />
+  </a>
+</p>
 
-## Benchmarks
+---
 
-Tested on Apple M3 Max, Bun 1.3.3
+## Performance
 
-### Transformer
+| Benchmark | Babel | Facetpack | Speedup |
+|-----------|-------|-----------|---------|
+| Transform (small) | 244 µs | 7.8 µs | **31x** |
+| Transform (large) | 2.47 ms | 64 µs | **38x** |
+| Resolve (cold) | 31.6 ms | 10.8 ms | **3x** |
 
-| Component Size | Babel | Facetpack/OXC | Speedup |
-|----------------|-------|---------------|---------|
-| Small (25 lines) | 244.14 µs | 7.87 µs | **31x faster** |
-| Large (200 lines) | 2.47 ms | 64.20 µs | **38x faster** |
+<sub>Tested on Apple M3 Max</sub>
 
-### Resolver
-
-| Mode | enhanced-resolve | Facetpack/OXC | Speedup |
-|------|------------------|---------------|---------|
-| Cold Cache (93 specifiers) | 31.62 ms | 10.81 ms | **3x faster** |
-| Batch API | 10.80 ms | 4.85 ms | **2.2x faster** |
-
-## Installation
+## Quick Start
 
 ```bash
-bun add @ecrindigital/facetpack
-# or
 npm install @ecrindigital/facetpack
 ```
-
-## Usage
-
-Wrap your Metro config with `withFacetpack`:
 
 ```js
 // metro.config.js
 const { getDefaultConfig } = require('expo/metro-config')
 const { withFacetpack } = require('@ecrindigital/facetpack')
 
-const config = getDefaultConfig(__dirname)
-
-module.exports = withFacetpack(config)
+module.exports = withFacetpack(getDefaultConfig(__dirname))
 ```
 
-That's it. Facetpack automatically:
-- Transforms user TypeScript/TSX/JSX code with OXC
-- Falls back to Babel for Flow packages (react-native, reanimated, etc.)
-- Batch-resolves imports for faster resolution
+**That's it.** ⚡
+
+---
+
+## Part of the Facet Ecosystem
+
+Facetpack is the foundation of **Facet**, the modern toolchain for React Native.
+
+| Coming Soon | Description |
+|-------------|-------------|
+| 🌳 Tree-shaking | 30% smaller bundles |
+| 🩺 Facet Doctor | Diagnose & auto-fix issues |
+| ⚡ Facet CLI | Faster dev server |
+| 🤖 f0 | AI component generation |
+| more tools    | coming soon |
+
+**[⭐ Star this repo](https://github.com/ecrindigital/facetpack)** to follow along!
+
+---
 
 ## How it works
 
