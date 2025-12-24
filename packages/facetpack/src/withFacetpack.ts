@@ -2,24 +2,22 @@ import type { MetroConfig, FacetpackOptions, MinifierConfig } from './types'
 import { resolveSync } from '@ecrindigital/facetpack-native'
 import { getCachedResolution } from './cache'
 import { createFacetpackSerializer, type CustomSerializer } from './serializer'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
+import { createRequire } from 'module'
 
 const DEFAULT_SOURCE_EXTS = ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs']
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = dirname(__filename)
+const require = createRequire(import.meta.url)
 
 export function withFacetpack(
   config: MetroConfig,
   options: FacetpackOptions = {}
 ): MetroConfig {
   const sourceExts = options.sourceExts ?? DEFAULT_SOURCE_EXTS
-  const transformerPath = join(__dirname, 'transformer.js')
+  const transformerPath = require.resolve('@ecrindigital/facetpack/transformer')
 
   const useMinifier = options.minifier !== false
   const minifierPath = useMinifier
-    ? join(__dirname, 'minifier.js')
+    ? require.resolve('@ecrindigital/facetpack/minifier')
     : config.transformer?.minifierPath
   const minifierConfig: MinifierConfig = typeof options.minifier === 'object'
     ? options.minifier
