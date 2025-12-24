@@ -92,7 +92,7 @@ describe('withFacetpack', () => {
 
     test('resolveRequest should handle node_modules', () => {
       const result = withFacetpack({})
-      const resolveRequest = result.resolver?.resolveRequest
+      const resolveRequest = result.resolver?.resolveRequest as any
 
       expect(resolveRequest).toBeDefined()
 
@@ -104,13 +104,13 @@ describe('withFacetpack', () => {
         }),
       }
 
-      const resolved = resolveRequest?.(mockContext, 'react', 'ios')
+      const resolved = resolveRequest(mockContext, 'react', 'ios')
       expect(resolved).toEqual({ type: 'sourceFile', filePath: '/resolved/path.js' })
     })
 
     test('resolveRequest should use fallback when resolve fails', () => {
       const result = withFacetpack({})
-      const resolveRequest = result.resolver?.resolveRequest
+      const resolveRequest = result.resolver?.resolveRequest as any
 
       const mockContext = {
         originModulePath: '/project/src/App.tsx',
@@ -120,7 +120,7 @@ describe('withFacetpack', () => {
         }),
       }
 
-      const resolved = resolveRequest?.(mockContext, 'nonexistent-module-xyz', 'ios')
+      const resolved = resolveRequest(mockContext, 'nonexistent-module-xyz', 'ios')
       expect(resolved).toBeDefined()
     })
 
@@ -134,7 +134,7 @@ describe('withFacetpack', () => {
       setCachedResolutions('/project/src/App.tsx', resolutions)
 
       const result = withFacetpack({})
-      const resolveRequest = result.resolver?.resolveRequest
+      const resolveRequest = result.resolver?.resolveRequest as any
 
       const mockContext = {
         originModulePath: '/project/src/App.tsx',
@@ -144,7 +144,7 @@ describe('withFacetpack', () => {
         }),
       }
 
-      const resolved = resolveRequest?.(mockContext, 'react', 'ios')
+      const resolved = resolveRequest(mockContext, 'react', 'ios')
       expect(resolved).toEqual({ type: 'sourceFile', filePath: '/node_modules/react/index.js' })
 
       clearCache()
@@ -160,7 +160,7 @@ describe('withFacetpack', () => {
       setCachedResolutions('/project/src/App.tsx', resolutions)
 
       const result = withFacetpack({})
-      const resolveRequest = result.resolver?.resolveRequest
+      const resolveRequest = result.resolver?.resolveRequest as any
 
       const mockContext = {
         originModulePath: '/project/src/App.tsx',
@@ -170,7 +170,7 @@ describe('withFacetpack', () => {
         }),
       }
 
-      const resolved = resolveRequest?.(mockContext, 'missing', 'ios')
+      const resolved = resolveRequest(mockContext, 'missing', 'ios')
       expect(resolved).toEqual({ type: 'sourceFile', filePath: '/fallback/path.js' })
 
       clearCache()

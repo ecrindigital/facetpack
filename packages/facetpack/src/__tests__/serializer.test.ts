@@ -337,7 +337,7 @@ describe('serializer', () => {
     })
 
     test('should pass original options to existing serializer', async () => {
-      let receivedOptions: SerializerOptions | null = null
+      let receivedOptions: any = null
       const existingSerializer = async (
         _entry: string,
         _pre: SerializerModule[],
@@ -351,7 +351,7 @@ describe('serializer', () => {
       const module = createModule('/src/index.js', 'export const x = 1;')
       const graph = createGraph([module])
       const options = createOptions(false)
-      options.platform = 'android'
+      ;(options as any).platform = 'android'
 
       await serializer('/src/index.js', [], graph, options)
 
