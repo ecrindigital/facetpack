@@ -1,6 +1,6 @@
 {
   "name": "@ecrindigital/facetpack",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "High-performance Metro transformer powered by OXC",
   "type": "module",
   "main": "dist/index.js",
@@ -61,7 +61,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.24.0",
-    "@ecrindigital/facetpack-native": "workspace:*"
+    "@ecrindigital/facetpack-native": "^0.1.2"
   },
   "devDependencies": {
     "@types/node": "^22",
