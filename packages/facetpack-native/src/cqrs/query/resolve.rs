@@ -112,8 +112,10 @@ impl ResolveBatchQuery {
     let resolver = Resolver::new(options);
     let path = Path::new(&self.directory);
 
-    self.specifiers.iter().map(|specifier| {
-      match resolver.resolve(path, specifier) {
+    self
+      .specifiers
+      .iter()
+      .map(|specifier| match resolver.resolve(path, specifier) {
         Ok(resolution) => ResolveResult {
           path: Some(resolution.full_path().to_string_lossy().to_string()),
           error: None,
@@ -122,8 +124,8 @@ impl ResolveBatchQuery {
           path: None,
           error: Some(e.to_string()),
         },
-      }
-    }).collect()
+      })
+      .collect()
   }
 }
 
@@ -133,11 +135,7 @@ mod tests {
 
   #[test]
   fn test_resolve_relative() {
-    let query = ResolveQuery::new(
-      ".".to_string(),
-      "./Cargo.toml".to_string(),
-      None,
-    );
+    let query = ResolveQuery::new(".".to_string(), "./Cargo.toml".to_string(), None);
     let result = query.execute().unwrap();
     assert!(result.path.is_some());
     assert!(result.error.is_none());
@@ -145,11 +143,7 @@ mod tests {
 
   #[test]
   fn test_resolve_not_found() {
-    let query = ResolveQuery::new(
-      ".".to_string(),
-      "./nonexistent-file-xyz".to_string(),
-      None,
-    );
+    let query = ResolveQuery::new(".".to_string(), "./nonexistent-file-xyz".to_string(), None);
     let result = query.execute().unwrap();
     assert!(result.path.is_none());
     assert!(result.error.is_some());

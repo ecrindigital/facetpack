@@ -14,7 +14,10 @@ pub struct AnalyzeQuery {
 
 impl AnalyzeQuery {
   pub fn new(filename: String, source_text: String) -> Self {
-    Self { filename, source_text }
+    Self {
+      filename,
+      source_text,
+    }
   }
 }
 
@@ -152,17 +155,15 @@ impl Query for AnalyzeQuery {
           });
         }
 
-        Statement::ExpressionStatement(expr_stmt) => {
-          match &expr_stmt.expression {
-            Expression::CallExpression(_) => {
-              has_side_effects = true;
-            }
-            Expression::AssignmentExpression(_) => {
-              has_side_effects = true;
-            }
-            _ => {}
+        Statement::ExpressionStatement(expr_stmt) => match &expr_stmt.expression {
+          Expression::CallExpression(_) => {
+            has_side_effects = true;
           }
-        }
+          Expression::AssignmentExpression(_) => {
+            has_side_effects = true;
+          }
+          _ => {}
+        },
 
         _ => {}
       }
@@ -274,7 +275,11 @@ mod tests {
 
     assert_eq!(result.imports.len(), 4);
 
-    let css_import = result.imports.iter().find(|i| i.source == "./styles.css").unwrap();
+    let css_import = result
+      .imports
+      .iter()
+      .find(|i| i.source == "./styles.css")
+      .unwrap();
     assert!(css_import.is_side_effect);
   }
 

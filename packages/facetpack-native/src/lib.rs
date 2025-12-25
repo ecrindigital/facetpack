@@ -8,9 +8,11 @@ use napi_derive::napi;
 pub use domain::types::*;
 
 use cqrs::command::{MinifyCommand, ShakeCommand, TransformCommand};
-use cqrs::query::{AnalyzeBatchQuery, AnalyzeQuery, ParseQuery, ResolveBatchQuery, ResolveQuery, ResolveResult, ResolverOptions};
+use cqrs::query::{
+  AnalyzeBatchQuery, AnalyzeQuery, ParseQuery, ResolveBatchQuery, ResolveQuery, ResolveResult,
+  ResolverOptions,
+};
 use cqrs::traits::{Command, Query};
-
 
 #[napi]
 pub struct FacetPack {
@@ -18,8 +20,7 @@ pub struct FacetPack {
 }
 
 #[derive(Default)]
-struct FacetPackConfig {
-}
+struct FacetPackConfig {}
 
 #[napi]
 impl FacetPack {

@@ -133,10 +133,13 @@ impl Command for ShakeCommand {
 fn get_declaration_name(decl: &Declaration) -> Option<String> {
   match decl {
     Declaration::VariableDeclaration(var_decl) => {
-      var_decl.declarations.first().and_then(|d| match &d.id.kind {
-        BindingPatternKind::BindingIdentifier(id) => Some(id.name.to_string()),
-        _ => None,
-      })
+      var_decl
+        .declarations
+        .first()
+        .and_then(|d| match &d.id.kind {
+          BindingPatternKind::BindingIdentifier(id) => Some(id.name.to_string()),
+          _ => None,
+        })
     }
     Declaration::FunctionDeclaration(fn_decl) => fn_decl.id.as_ref().map(|id| id.name.to_string()),
     Declaration::ClassDeclaration(class_decl) => {
@@ -175,8 +178,11 @@ mod tests {
       export const a = 1;
       export const b = 2;
     "#;
-    let command =
-      ShakeCommand::new("test.js".to_string(), code.to_string(), vec!["*".to_string()]);
+    let command = ShakeCommand::new(
+      "test.js".to_string(),
+      code.to_string(),
+      vec!["*".to_string()],
+    );
     let result = command.execute().unwrap();
 
     assert!(result.removed_exports.is_empty());

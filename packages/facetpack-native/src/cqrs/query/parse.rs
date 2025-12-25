@@ -30,9 +30,7 @@ impl ParseQuery {
       Some(SourceType::Jsx) => OxcSourceType::jsx(),
       Some(SourceType::Tsx) => OxcSourceType::tsx(),
       Some(SourceType::Typescript) => OxcSourceType::ts(),
-      None => {
-        OxcSourceType::from_path(&self.filename).unwrap_or_default()
-      }
+      None => OxcSourceType::from_path(&self.filename).unwrap_or_default(),
     }
   }
 
@@ -50,11 +48,7 @@ impl Query for ParseQuery {
 
     let parser_return = Parser::new(&allocator, &self.source_text, source_type).parse();
 
-    let errors: Vec<String> = parser_return
-      .errors
-      .iter()
-      .map(|e| e.to_string())
-      .collect();
+    let errors: Vec<String> = parser_return.errors.iter().map(|e| e.to_string()).collect();
 
     let program = Self::serialize_program(&parser_return.program);
 
@@ -112,7 +106,11 @@ mod tests {
       source_type: Some(SourceType::Module),
       preserve_parens: None,
     };
-    let query = ParseQuery::new("test.txt".to_string(), "const x = 1;".to_string(), Some(options));
+    let query = ParseQuery::new(
+      "test.txt".to_string(),
+      "const x = 1;".to_string(),
+      Some(options),
+    );
     let result = query.execute().unwrap();
 
     assert!(!result.panicked);
@@ -132,7 +130,11 @@ mod tests {
       source_type: Some(SourceType::Script),
       preserve_parens: None,
     };
-    let query = ParseQuery::new("test.txt".to_string(), "var x = 1;".to_string(), Some(options));
+    let query = ParseQuery::new(
+      "test.txt".to_string(),
+      "var x = 1;".to_string(),
+      Some(options),
+    );
     assert!(query.execute().is_ok());
 
     let options = ParseOptions {
@@ -153,7 +155,11 @@ mod tests {
       source_type: Some(SourceType::Typescript),
       preserve_parens: None,
     };
-    let query = ParseQuery::new("test.txt".to_string(), "const x: number = 1;".to_string(), Some(options));
+    let query = ParseQuery::new(
+      "test.txt".to_string(),
+      "const x: number = 1;".to_string(),
+      Some(options),
+    );
     assert!(query.execute().is_ok());
   }
 }

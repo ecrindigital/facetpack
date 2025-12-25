@@ -229,35 +229,49 @@ mod tests {
       source_type: Some(SourceType::Module),
       ..Default::default()
     };
-    let command = TransformCommand::new("test.txt".to_string(), "export const x = 1;".to_string(), Some(options));
+    let command = TransformCommand::new(
+      "test.txt".to_string(),
+      "export const x = 1;".to_string(),
+      Some(options),
+    );
     assert!(command.execute().is_ok());
 
     let options = TransformOptions {
       source_type: Some(SourceType::Script),
       ..Default::default()
     };
-    let command = TransformCommand::new("test.txt".to_string(), "var x = 1;".to_string(), Some(options));
+    let command = TransformCommand::new(
+      "test.txt".to_string(),
+      "var x = 1;".to_string(),
+      Some(options),
+    );
     assert!(command.execute().is_ok());
 
     let options = TransformOptions {
       source_type: Some(SourceType::Jsx),
       ..Default::default()
     };
-    let command = TransformCommand::new("test.txt".to_string(), "<div/>".to_string(), Some(options));
+    let command =
+      TransformCommand::new("test.txt".to_string(), "<div/>".to_string(), Some(options));
     assert!(command.execute().is_ok());
 
     let options = TransformOptions {
       source_type: Some(SourceType::Tsx),
       ..Default::default()
     };
-    let command = TransformCommand::new("test.txt".to_string(), "<div/>".to_string(), Some(options));
+    let command =
+      TransformCommand::new("test.txt".to_string(), "<div/>".to_string(), Some(options));
     assert!(command.execute().is_ok());
 
     let options = TransformOptions {
       source_type: Some(SourceType::Typescript),
       ..Default::default()
     };
-    let command = TransformCommand::new("test.txt".to_string(), "const x: number = 1;".to_string(), Some(options));
+    let command = TransformCommand::new(
+      "test.txt".to_string(),
+      "const x: number = 1;".to_string(),
+      Some(options),
+    );
     assert!(command.execute().is_ok());
   }
 
