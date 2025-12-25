@@ -12,7 +12,7 @@ If you discover a security vulnerability in Facetpack, please report it responsi
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, please send an email to: **hello@ecrin.digital**
+Instead, please send an email to: **hello@ecrin.digital** (temporary e-mail until we have a proper security contact)
 
 Include the following information:
 - Description of the vulnerability
