@@ -59,6 +59,7 @@ const defaultOptions: Required<FacetpackOptions> = {
   sourceExts: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs'],
   minifier: true,
   treeShake: true,
+  noAst: false,
 }
 
 let globalOptions: FacetpackOptions = {}
@@ -90,8 +91,20 @@ export function setTransformerOptions(options: FacetpackOptions): void {
   globalOptions = options
 }
 
+function getStoredOptions(): FacetpackOptions {
+  try {
+    const optionsJson = process.env.FACETPACK_OPTIONS
+    if (optionsJson) {
+      return JSON.parse(optionsJson)
+    }
+  } catch {
+  }
+  return {}
+}
+
 function getOptions(): Required<FacetpackOptions> {
-  return { ...defaultOptions, ...globalOptions }
+  const storedOptions = getStoredOptions()
+  return { ...defaultOptions, ...globalOptions, ...storedOptions }
 }
 
 function isNodeModules(filename: string): boolean {
@@ -146,10 +159,13 @@ export function transform(params: TransformParams): TransformResult {
 
     preResolveImports(filename, result.code, opts.sourceExts)
 
-    const ast = parse(result.code, {
-      sourceType: 'unambiguous',
-      plugins: ['jsx'],
-    })
+    // Only generate AST if not disabled
+    const ast = opts.noAst
+      ? undefined
+      : parse(result.code, {
+          sourceType: 'unambiguous',
+          plugins: ['jsx'],
+        })
 
     const output = {
       ast,

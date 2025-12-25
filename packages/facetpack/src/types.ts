@@ -16,6 +16,8 @@ export interface FacetpackOptions {
   sourceExts?: string[]
   minifier?: boolean | MinifierConfig
   treeShake?: boolean
+  /** If true, don't return AST - let Metro parse the code itself */
+  noAst?: boolean
 }
 
 export interface MetroTransformerConfig {
