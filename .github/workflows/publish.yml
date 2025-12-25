@@ -257,6 +257,24 @@ jobs:
         run: bunx @napi-rs/cli create-npm-dirs
         working-directory: packages/facetpack-native
 
+      - name: Update npm package versions
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Updating npm packages to version $VERSION"
+          for dir in npm/*/; do
+            if [ -f "$dir/package.json" ]; then
+              # Update version in package.json
+              node -e "
+                const fs = require('fs');
+                const pkg = JSON.parse(fs.readFileSync('$dir/package.json', 'utf8'));
+                pkg.version = '$VERSION';
+                fs.writeFileSync('$dir/package.json', JSON.stringify(pkg, null, 2) + '\n');
+              "
+              echo "Updated $dir to version $VERSION"
+            fi
+          done
+        working-directory: packages/facetpack-native
+
       - name: Copy binaries to npm directories
         run: |
           for file in *.node; do
