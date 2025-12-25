@@ -25,10 +25,12 @@
       "types": "./dist/serializer.d.ts",
       "import": "./dist/serializer.js",
       "require": "./dist/serializer.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "package.json"
   ],
   "author": {
     "name": "Ecrin Digital",
