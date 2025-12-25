@@ -40,7 +40,8 @@
       "x86_64-pc-windows-msvc",
       "x86_64-apple-darwin",
       "x86_64-unknown-linux-gnu",
-      "aarch64-apple-darwin"
+      "aarch64-apple-darwin",
+      "aarch64-unknown-linux-gnu"
     ]
   },
   "engines": {
@@ -124,6 +125,7 @@
     "@ecrindigital/facetpack-native-win32-x64-msvc": "0.1.2",
     "@ecrindigital/facetpack-native-darwin-x64": "0.1.2",
     "@ecrindigital/facetpack-native-linux-x64-gnu": "0.1.2",
-    "@ecrindigital/facetpack-native-darwin-arm64": "0.1.2"
+    "@ecrindigital/facetpack-native-darwin-arm64": "0.1.2",
+    "@ecrindigital/facetpack-native-linux-arm64-gnu": "0.1.2"
   }
 }
