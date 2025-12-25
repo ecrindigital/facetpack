@@ -111,8 +111,32 @@ function isNodeModules(filename: string): boolean {
   return filename.includes('node_modules')
 }
 
-function shouldTransform(filename: string, options: Required<FacetpackOptions>): boolean {
+const BABEL_REQUIRED_PATTERNS = [
+  /'worklet'/,
+  /"worklet"/,
+  /useAnimatedStyle/,
+  /useAnimatedProps/,
+  /useDerivedValue/,
+  /useAnimatedReaction/,
+  /useAnimatedScrollHandler/,
+  /useAnimatedGestureHandler/,
+  /runOnUI/,
+  /runOnJS/,
+]
+
+function requiresBabelTransform(src: string): boolean {
+  return BABEL_REQUIRED_PATTERNS.some(pattern => pattern.test(src))
+}
+
+function shouldTransform(filename: string, src: string, options: Required<FacetpackOptions>): boolean {
   if (isNodeModules(filename)) {
+    return false
+  }
+
+  if (requiresBabelTransform(src)) {
+    if (process.env.FACETPACK_DEBUG) {
+      console.log(`[Facetpack] Babel required for worklets: ${filename}`)
+    }
     return false
   }
 
@@ -129,7 +153,7 @@ export function transform(params: TransformParams): TransformResult {
     console.log(`[Facetpack] Processing: ${filename}`)
   }
 
-  if (!shouldTransform(filename, opts)) {
+  if (!shouldTransform(filename, src, opts)) {
     if (process.env.FACETPACK_DEBUG) {
       console.log(`[Facetpack] Fallback: ${filename}`)
     }
@@ -194,7 +218,7 @@ export function createTransformer(options: FacetpackOptions = {}) {
     transform(params: TransformParams): TransformResult {
       const { filename, src, options: metroOptions } = params
 
-      if (!shouldTransform(filename, opts)) {
+      if (!shouldTransform(filename, src, opts)) {
         return getFallbackTransformer().transform(params)
       }
 
