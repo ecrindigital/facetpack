@@ -336,10 +336,7 @@ jobs:
         run: bun run build
         working-directory: packages/facetpack
 
-      - name: Test facetpack
-        run: bun test
-        working-directory: packages/facetpack
-
+      # Tests already run in the 'test' job, skip here to avoid needing binary
       - name: Publish facetpack
         run: npm publish --provenance --access public
         working-directory: packages/facetpack
