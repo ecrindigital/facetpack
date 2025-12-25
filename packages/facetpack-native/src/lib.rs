@@ -22,6 +22,12 @@ pub struct FacetPack {
 #[derive(Default)]
 struct FacetPackConfig {}
 
+impl Default for FacetPack {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 #[napi]
 impl FacetPack {
   #[napi(constructor)]
