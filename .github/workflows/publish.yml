@@ -183,6 +183,15 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-x86_64-unknown-linux-gnu
+          path: packages/facetpack-native
+
+      - name: Verify binary exists
+        run: ls -la packages/facetpack-native/*.node
+
       - name: Cache Bun dependencies
         uses: actions/cache@v4
         with:
@@ -193,12 +202,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: bindings-x86_64-unknown-linux-gnu
-          path: packages/facetpack-native
 
       - name: Build all packages
         run: bun run build:all
@@ -276,8 +279,23 @@ jobs:
           done
         working-directory: packages/facetpack-native
 
-      - name: Publish platform packages (via napi prepublish)
-        run: bun run prepublishOnly
+      - name: Publish platform packages
+        run: |
+          # Disable GitHub release creation (we do it separately)
+          # and publish each platform package manually
+          for dir in npm/*/; do
+            if [ -d "$dir" ] && [ -f "$dir/package.json" ]; then
+              echo "::group::Publishing $(basename $dir)"
+              cd "$dir"
+              # Check if .node file exists
+              if ls *.node 1> /dev/null 2>&1; then
+                npm publish --provenance --access public || echo "::warning::Failed to publish $(basename $dir)"
+              else
+                echo "::warning::No .node file in $(basename $dir), skipping"
+              fi
+              cd ../..
+            fi
+          done
         working-directory: packages/facetpack-native
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -4,7 +4,9 @@ use crate::domain::types::{MinifyOptions, MinifyResult};
 
 use oxc_allocator::Allocator;
 use oxc_codegen::{Codegen, CodegenOptions};
-use oxc_minifier::{CompressOptions, MangleOptions, MangleOptionsKeepNames, Minifier, MinifierOptions};
+use oxc_minifier::{
+  CompressOptions, MangleOptions, MangleOptionsKeepNames, Minifier, MinifierOptions,
+};
 use oxc_parser::Parser;
 use oxc_span::SourceType;
 

@@ -171,6 +171,15 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-x86_64-unknown-linux-gnu
+          path: packages/facetpack-native
+
+      - name: Verify binary exists
+        run: ls -la packages/facetpack-native/*.node
+
       - name: Cache Bun dependencies
         uses: actions/cache@v4
         with:
@@ -181,12 +190,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install
-
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: bindings-x86_64-unknown-linux-gnu
-          path: packages/facetpack-native
 
       - name: Build all packages
         run: bun run build:all
@@ -207,14 +210,17 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun install
-
       - name: Download universal artifact
         uses: actions/download-artifact@v4
         with:
           name: bindings-universal-apple-darwin
           path: packages/facetpack-native
+
+      - name: Verify binary exists
+        run: ls -la packages/facetpack-native/*.node
+
+      - name: Install dependencies
+        run: bun install
 
       - name: Build all packages
         run: bun run build:all
@@ -235,14 +241,17 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Install dependencies
-        run: bun install
-
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
           name: bindings-x86_64-pc-windows-msvc
           path: packages/facetpack-native
+
+      - name: Verify binary exists
+        run: dir packages\facetpack-native\*.node
+
+      - name: Install dependencies
+        run: bun install
 
       - name: Build all packages
         run: bun run build:all
