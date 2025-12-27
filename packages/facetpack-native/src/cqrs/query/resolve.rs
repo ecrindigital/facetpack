@@ -148,4 +148,34 @@ mod tests {
     assert!(result.path.is_none());
     assert!(result.error.is_some());
   }
+
+  #[test]
+  fn test_error_module_not_found() {
+    let query = ResolveQuery::new(
+      ".".to_string(),
+      "react-native-xyz-nonexistent".to_string(),
+      None,
+    );
+    let result = query.execute().unwrap();
+    assert!(result.error.is_some());
+  }
+
+  #[test]
+  fn test_error_file_not_found_with_typo() {
+    let query = ResolveQuery::new(".".to_string(), "./Cargo.taml".to_string(), None);
+    let result = query.execute().unwrap();
+    assert!(result.error.is_some());
+  }
+
+  #[test]
+  fn test_error_directory_instead_of_file() {
+    let query = ResolveQuery::new(".".to_string(), "./src".to_string(), None);
+    let _result = query.execute().unwrap();
+  }
+
+  #[test]
+  fn test_error_missing_extension() {
+    let query = ResolveQuery::new(".".to_string(), "./src/lib".to_string(), None);
+    let _result = query.execute().unwrap();
+  }
 }

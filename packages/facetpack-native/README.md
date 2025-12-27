@@ -41,7 +41,51 @@ const result = parseSync('App.tsx', code, {
 
 console.log(result.program)
 console.log(result.errors)
+console.log(result.diagnostics)
 ```
+
+### Rich Diagnostics
+
+Parse errors include detailed diagnostics with contextual help messages, similar to Rust compiler errors:
+
+```ts
+const result = parseSync('config.ts', `const obj = {
+  name: 'test',
+  items: [
+    { id: 1
+  ]
+}`)
+
+result.diagnostics.forEach(d => console.log(d.formatted))
+```
+
+Output:
+```
+  × Expected `,` or `}` but found `]`
+   ╭─[config.ts:5:3]
+ 1 │ const obj = {
+ 2 │   name: 'test',
+ 3 │   items: [
+ 4 │     { id: 1
+   ·     ┬
+   ·     ╰── Opened here
+ 5 │   ]
+   ·   ┬
+   ·   ╰── `,` or `}` expected
+ 6 │ }
+   ╰────
+  help: Check for missing punctuation or unclosed brackets
+```
+
+Each diagnostic includes:
+- `severity` - Error, Warning, Info, or Hint
+- `code` - Error code (e.g., E0001)
+- `message` - Error description
+- `filename`, `line`, `column` - Location info
+- `snippet` - Relevant source code line
+- `help` - Contextual suggestion to fix the error
+- `suggestion` - Specific fix recommendation
+- `formatted` - Pre-formatted colored output with visual pointers
 
 ### Resolve
 

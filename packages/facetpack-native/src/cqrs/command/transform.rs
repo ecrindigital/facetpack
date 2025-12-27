@@ -131,6 +131,7 @@ impl Command for TransformCommand {
       code: codegen_return.code,
       map,
       errors,
+      diagnostics: vec![],
     })
   }
 }
@@ -293,5 +294,43 @@ mod tests {
     let result = command.execute().unwrap();
 
     assert!(result.errors.is_empty());
+  }
+
+  #[test]
+  fn test_error_transform_invalid_jsx_attribute() {
+    let code = r#"const App = () => <View style= />;"#;
+    let command = TransformCommand::new("Component.tsx".to_string(), code.to_string(), None);
+    let result = command.execute();
+    assert!(result.is_err());
+  }
+
+  #[test]
+  fn test_error_transform_unclosed_jsx_tag() {
+    let code = r#"const App = () => <View><Text>Hello</View>;"#;
+    let command = TransformCommand::new("App.tsx".to_string(), code.to_string(), None);
+    let result = command.execute();
+    assert!(result.is_err());
+  }
+
+  #[test]
+  fn test_error_transform_invalid_typescript_generic() {
+    let code = "const fn = <T,>(x: T) => x; fn<>(5);";
+    let command = TransformCommand::new("generic.ts".to_string(), code.to_string(), None);
+    let _result = command.execute();
+  }
+
+  #[test]
+  fn test_error_transform_mixed_jsx_children() {
+    let code = r#"const App = () => <View>{items.map(i => <Text key={i}>{i}</Text>)}</View>;"#;
+    let command = TransformCommand::new("List.tsx".to_string(), code.to_string(), None);
+    let result = command.execute();
+    assert!(result.is_ok());
+  }
+
+  #[test]
+  fn test_error_transform_async_in_wrong_context() {
+    let code = r#"const x = await fetch('/api');"#;
+    let command = TransformCommand::new("api.ts".to_string(), code.to_string(), None);
+    let _result = command.execute();
   }
 }

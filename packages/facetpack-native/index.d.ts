@@ -11,6 +11,29 @@ export declare function analyzeBatchSync(modules: Array<ModuleInput>): Array<Mod
 
 export declare function analyzeSync(filename: string, sourceText: string): ModuleAnalysis
 
+export interface Diagnostic {
+  severity: DiagnosticSeverity
+  code?: string
+  message: string
+  filename: string
+  line: number
+  column: number
+  endLine?: number
+  endColumn?: number
+  snippet?: string
+  label?: string
+  help?: string
+  suggestion?: string
+  formatted: string
+}
+
+export declare const enum DiagnosticSeverity {
+  Error = 'Error',
+  Warning = 'Warning',
+  Info = 'Info',
+  Hint = 'Hint'
+}
+
 export interface ExportInfo {
   name: string
   isDefault: boolean
@@ -64,6 +87,7 @@ export interface ParseOptions {
 export interface ParseResult {
   program: string
   errors: Array<string>
+  diagnostics: Array<Diagnostic>
   panicked: boolean
 }
 
@@ -115,6 +139,7 @@ export interface TransformResult {
   code: string
   map?: string
   errors: Array<string>
+  diagnostics: Array<Diagnostic>
 }
 
 export declare function transformSync(filename: string, sourceText: string, options?: TransformOptions | undefined | null): TransformResult

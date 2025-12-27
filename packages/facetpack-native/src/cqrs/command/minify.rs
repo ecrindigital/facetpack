@@ -149,7 +149,7 @@ mod tests {
     "#;
     let options = MinifyOptions {
       mangle: Some(false),
-      compress: Some(false), // Disable compress to avoid dead code elimination
+      compress: Some(false),
       ..Default::default()
     };
     let command = MinifyCommand::new(code.to_string(), "test.js".to_string(), Some(options));
