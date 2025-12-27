@@ -140,15 +140,16 @@ mod tests {
 
   #[test]
   fn test_minify_without_mangle() {
+    // Export function so it's not removed as dead code
     let code = r#"
-      function calculateTotal(price, quantity) {
+      export function calculateTotal(price, quantity) {
         const total = price * quantity;
         return total;
       }
     "#;
     let options = MinifyOptions {
       mangle: Some(false),
-      compress: Some(true),
+      compress: Some(false), // Disable compress to avoid dead code elimination
       ..Default::default()
     };
     let command = MinifyCommand::new(code.to_string(), "test.js".to_string(), Some(options));
