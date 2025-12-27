@@ -1,6 +1,6 @@
 {
   "name": "@ecrindigital/facetpack-native",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Native bindings for Facetpack - OXC-powered transformer and resolver",
   "main": "index.js",
   "repository": {
