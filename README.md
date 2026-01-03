@@ -14,6 +14,9 @@
   <a href="https://www.npmjs.com/package/@ecrindigital/facetpack">
     <img src="https://img.shields.io/npm/dm/@ecrindigital/facetpack.svg" alt="npm downloads" />
   </a>
+  <a href="https://discord.gg/kX7xzknGmv">
+    <img src="https://img.shields.io/discord/1457120530409980069?color=7289da&label=Discord&logo=discord&logoColor=white" alt="Discord" />
+  </a>
   <a href="https://github.com/ecrindigital/facetpack/stargazers">
     <img src="https://img.shields.io/github/stars/ecrindigital/facetpack.svg?style=social" alt="GitHub stars" />
   </a>
@@ -166,6 +169,12 @@ bun run build
 # Run tests
 bun test
 ```
+
+## Community
+
+Join our Discord to get help, share feedback, and connect with other developers using Facetpack:
+
+[![Discord](https://img.shields.io/discord/1457120530409980069?color=7289da&label=Join%20our%20Discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/kX7xzknGmv)
 
 ## License
 
