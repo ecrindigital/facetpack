@@ -15,7 +15,7 @@
     "@babel/core": "^7.24.0",
     "@babel/preset-react": "^7.24.0",
     "@babel/preset-typescript": "^7.24.0",
-    "@ecrindigital/facetpack-native": "^0.1.0",
+    "@ecrindigital/facetpack-native": "workspace:*",
     "enhanced-resolve": "^5.15.0",
     "terser": "^5.27.0"
   }

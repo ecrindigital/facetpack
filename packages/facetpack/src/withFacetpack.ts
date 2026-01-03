@@ -48,7 +48,7 @@ export function withFacetpack(
     ? options.minifier
     : {}
 
-  const useTreeShake = options.treeShake !== false
+  const useTreeShake = options.treeShake === true
   const existingSerializer = (config as any).serializer?.customSerializer as CustomSerializer | undefined
   const customSerializer = useTreeShake
     ? createFacetpackSerializer(existingSerializer, { treeShake: true })
@@ -59,6 +59,8 @@ export function withFacetpack(
   const fallbackTransformerPath = originalTransformerPath || findFallbackTransformer(projectRoot)
 
   storeTransformerOptions(options, fallbackTransformerPath)
+
+  const existingResolver = config.resolver?.resolveRequest
 
   return {
     ...config,
@@ -97,8 +99,10 @@ export function withFacetpack(
         ]),
       ],
       resolveRequest: (context: any, moduleName: string, platform: string | null) => {
+        const fallbackResolver = existingResolver ?? context.resolveRequest
+
         if (context.originModulePath.includes('node_modules')) {
-          return context.resolveRequest(context, moduleName, platform)
+          return fallbackResolver(context, moduleName, platform)
         }
 
         const cached = getCachedResolution(context.originModulePath, moduleName)
@@ -106,7 +110,7 @@ export function withFacetpack(
           if (cached) {
             return { type: 'sourceFile', filePath: cached }
           }
-          return context.resolveRequest(context, moduleName, platform)
+          return fallbackResolver(context, moduleName, platform)
         }
 
         const directory = context.originModulePath.substring(
@@ -124,7 +128,7 @@ export function withFacetpack(
           return { type: 'sourceFile', filePath: result.path }
         }
 
-        return context.resolveRequest(context, moduleName, platform)
+        return fallbackResolver(context, moduleName, platform)
       },
     },
     serializer: {

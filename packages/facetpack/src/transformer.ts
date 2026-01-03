@@ -1,4 +1,4 @@
-import { transformSync, JsxRuntime, resolveBatchSync } from '@ecrindigital/facetpack-native'
+import { transformSync, JsxRuntime, resolveBatchSync, parseSync } from '@ecrindigital/facetpack-native'
 import { parse } from '@babel/parser'
 import type { TransformParams, TransformResult, FacetpackOptions } from './types'
 import { setCachedResolutions } from './cache'
@@ -124,8 +124,20 @@ const BABEL_REQUIRED_PATTERNS = [
   /runOnJS/,
 ]
 
+const HERMES_COMPAT_PATTERNS = [
+  /\basync\s+function\b/,     
+  /\basync\s*\(/,             
+  /\basync\s+\w+\s*\(/,       
+  /=\s*async\s*\(/,           
+  /=\s*async\s+function\b/,   
+]
+
 function requiresBabelTransform(src: string): boolean {
   return BABEL_REQUIRED_PATTERNS.some(pattern => pattern.test(src))
+}
+
+function requiresHermesCompat(src: string): boolean {
+  return HERMES_COMPAT_PATTERNS.some(pattern => pattern.test(src))
 }
 
 function shouldTransform(filename: string, src: string, options: Required<FacetpackOptions>): boolean {
@@ -136,6 +148,13 @@ function shouldTransform(filename: string, src: string, options: Required<Facetp
   if (requiresBabelTransform(src)) {
     if (process.env.FACETPACK_DEBUG) {
       console.log(`[Facetpack] Babel required for worklets: ${filename}`)
+    }
+    return false
+  }
+
+  if (requiresHermesCompat(src)) {
+    if (process.env.FACETPACK_DEBUG) {
+      console.log(`[Facetpack] Babel required for async/await (Hermes compat): ${filename}`)
     }
     return false
   }
@@ -165,6 +184,29 @@ export function transform(params: TransformParams): TransformResult {
   }
 
   try {
+    const parseResult = parseSync(filename, src)
+    if (parseResult.errors.length > 0 && parseResult.diagnostics.length > 0) {
+      const formattedErrors = parseResult.diagnostics
+        .map(d => {
+          let output = d.formatted || ''
+          if (!output && d.message) {
+            output = `\n  × ${d.message}\n`
+            if (d.snippet) {
+              output += `   ╭─[${d.filename}:${d.line}:${d.column}]\n`
+              output += ` ${d.line} │ ${d.snippet}\n`
+              output += `   ╰────\n`
+            }
+            if (d.help) {
+              output += `  help: ${d.help}\n`
+            }
+          }
+          return output
+        })
+        .join('\n')
+
+      throw new Error(`\n${formattedErrors}`)
+    }
+
     const isClassic = opts.jsxRuntime === 'classic'
     const result = transformSync(filename, src, {
       jsx: opts.jsx,
