@@ -1,26 +1,25 @@
-import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import { checkExpoConfigCommonIssues } from '../check-expo-config-common-issues.check'
 import type { CheckContext } from '../types'
-import * as fs from 'node:fs'
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { join } from 'node:path'
 
-const mockExistsSync = mock(() => false)
-const mockReadFileSync = mock(() => '')
+const TEST_DIR = '/tmp/facet-cli-test-expo-common'
 
-mock.module('node:fs', () => ({
-  existsSync: mockExistsSync,
-  readFileSync: mockReadFileSync,
-}))
+const ctx = (): CheckContext => ({
+  cwd: TEST_DIR,
+  packageJson: null,
+  fix: false,
+})
 
 describe('check-expo-config-common-issues', () => {
-  const baseContext: CheckContext = {
-    cwd: '/test/project',
-    packageJson: null,
-    fix: false,
-  }
-
   beforeEach(() => {
-    mockExistsSync.mockReset()
-    mockReadFileSync.mockReset()
+    mkdirSync(TEST_DIR, { recursive: true })
+    mkdirSync(join(TEST_DIR, 'assets'), { recursive: true })
+  })
+
+  afterEach(() => {
+    rmSync(TEST_DIR, { recursive: true, force: true })
   })
 
   test('should have correct metadata', () => {
@@ -29,121 +28,112 @@ describe('check-expo-config-common-issues', () => {
   })
 
   test('should return null when app.json does not exist', async () => {
-    mockExistsSync.mockImplementation(() => false)
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result).toBeNull()
   })
 
   test('should return null when expo key is missing', async () => {
-    mockExistsSync.mockImplementation((path: string) => path.includes('app.json'))
-    mockReadFileSync.mockImplementation(() => JSON.stringify({ name: 'test' }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({ name: 'test' }))
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result).toBeNull()
   })
 
   test('should warn on invalid iOS bundleIdentifier format', async () => {
-    mockExistsSync.mockImplementation((path: string) => path.includes('app.json'))
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
         ios: { bundleIdentifier: 'invalid' }
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('warning')
     expect(result?.detail).toContain('Invalid iOS bundleIdentifier')
   })
 
   test('should warn on com.example placeholder in iOS bundleIdentifier', async () => {
-    mockExistsSync.mockImplementation((path: string) => path.includes('app.json'))
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
         ios: { bundleIdentifier: 'com.example.myapp' }
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('warning')
     expect(result?.detail).toContain('placeholder')
   })
 
   test('should warn on invalid Android package format', async () => {
-    mockExistsSync.mockImplementation((path: string) => path.includes('app.json'))
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
         android: { package: '123invalid' }
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('warning')
     expect(result?.detail).toContain('Invalid Android package')
   })
 
   test('should warn on com.example placeholder in Android package', async () => {
-    mockExistsSync.mockImplementation((path: string) => path.includes('app.json'))
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
         android: { package: 'com.example.myapp' }
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('warning')
     expect(result?.detail).toContain('placeholder')
   })
 
   test('should warn when icon file does not exist', async () => {
-    mockExistsSync.mockImplementation((path: string) => {
-      if (path.includes('app.json')) return true
-      if (path.includes('icon.png')) return false
-      return false
-    })
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
         icon: './assets/icon.png'
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('warning')
     expect(result?.detail).toContain('Icon not found')
   })
 
+  test('should not warn when icon file exists', async () => {
+    writeFileSync(join(TEST_DIR, 'assets', 'icon.png'), '')
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
+      expo: {
+        name: 'Test',
+        slug: 'test',
+        version: '2.0.0',
+        icon: './assets/icon.png',
+        ios: { bundleIdentifier: 'com.mycompany.test', buildNumber: '10' },
+        android: { package: 'com.mycompany.test' }
+      }
+    }))
+    const result = await checkExpoConfigCommonIssues.run(ctx())
+    expect(result?.status).toBe('success')
+  })
+
   test('should warn when splash image does not exist', async () => {
-    mockExistsSync.mockImplementation((path: string) => {
-      if (path.includes('app.json')) return true
-      if (path.includes('splash.png')) return false
-      return false
-    })
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
         splash: { image: './assets/splash.png' }
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('warning')
     expect(result?.detail).toContain('Splash image not found')
   })
 
   test('should warn on default version/buildNumber', async () => {
-    mockExistsSync.mockImplementation((path: string) => path.includes('app.json'))
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
@@ -151,15 +141,13 @@ describe('check-expo-config-common-issues', () => {
         ios: { buildNumber: '1' }
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('warning')
     expect(result?.detail).toContain('default version')
   })
 
   test('should show count of additional issues', async () => {
-    mockExistsSync.mockImplementation((path: string) => path.includes('app.json'))
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
@@ -167,15 +155,13 @@ describe('check-expo-config-common-issues', () => {
         android: { package: 'com.example.test' }
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('warning')
     expect(result?.detail).toContain('+')
   })
 
   test('should return success when no issues found', async () => {
-    mockExistsSync.mockImplementation(() => true)
-    mockReadFileSync.mockImplementation(() => JSON.stringify({
+    writeFileSync(join(TEST_DIR, 'app.json'), JSON.stringify({
       expo: {
         name: 'Test',
         slug: 'test',
@@ -189,17 +175,14 @@ describe('check-expo-config-common-issues', () => {
         }
       }
     }))
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result?.status).toBe('success')
     expect(result?.detail).toContain('No common issues')
   })
 
   test('should return null on parse error', async () => {
-    mockExistsSync.mockImplementation((path: string) => path.includes('app.json'))
-    mockReadFileSync.mockImplementation(() => '{ invalid }')
-
-    const result = await checkExpoConfigCommonIssues.run(baseContext)
+    writeFileSync(join(TEST_DIR, 'app.json'), '{ invalid }')
+    const result = await checkExpoConfigCommonIssues.run(ctx())
     expect(result).toBeNull()
   })
 })

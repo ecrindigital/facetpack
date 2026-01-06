@@ -14,6 +14,10 @@ import { checkNativeBindingsLoaded } from './check-native-bindings-loaded.check'
 import { checkExpoConfigSchema } from './check-expo-config-schema.check'
 import { checkExpoConfigCommonIssues } from './check-expo-config-common-issues.check'
 import { checkConfigFieldsNotSynced } from './check-config-fields-not-synced.check'
+import { checkProjectSetup } from './check-project-setup.check'
+import { checkPackageJson } from './check-package-json.check'
+import { checkStoreCompatibility } from './check-store-compatibility.check'
+import { checkGitignore } from './check-gitignore.check'
 import { checkMetroConfigExists } from './check-metro-config-exists.check'
 import { checkMetroConfigValid } from './check-metro-config-valid.check'
 import { checkWithFacetpackApplied } from './check-with-facetpack-applied.check'
@@ -42,9 +46,13 @@ export const checks: Check[] = [
   checkFacetpackInstalled,
   checkFacetpackNativeInstalled,
   checkNativeBindingsLoaded,
+  checkProjectSetup,
+  checkPackageJson,
   checkExpoConfigSchema,
   checkExpoConfigCommonIssues,
   checkConfigFieldsNotSynced,
+  checkStoreCompatibility,
+  checkGitignore,
   checkMetroConfigExists,
   checkMetroConfigValid,
   checkWithFacetpackApplied,
