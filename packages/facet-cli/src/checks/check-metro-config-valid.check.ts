@@ -8,6 +8,25 @@ const DANGEROUS_PATTERNS = [
   { pattern: /process\.exit/, message: 'process.exit() detected' },
 ]
 
+/**
+ * Validates the `metro.config.js` file for syntax errors and unsafe patterns.
+ *
+ * @remarks
+ * Detects common dangerous patterns like `eval()`, `child_process` imports, and `process.exit()` calls.
+ *
+ * @why
+ * Invalid or unsafe Metro config can break the bundler or introduce runtime issues.
+ *
+ * @failure
+ * - Returns `error` if the config has invalid JavaScript syntax.
+ * - Returns `warning` if dangerous patterns are detected.
+ *
+ * @fix
+ * - Correct syntax errors in `metro.config.js`.
+ * - Remove or replace any dangerous patterns in the config.
+ *
+ * @category Metro
+ */
 export const checkMetroConfigValid: Check = {
   name: 'metro-config-valid',
   category: 'Metro',

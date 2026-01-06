@@ -10,6 +10,22 @@ const OTHER_WRAPPERS = [
   'withReanimated',
 ]
 
+/**
+ * Ensures that `withFacetpack` is applied as the innermost Metro config wrapper.
+ *
+ * @remarks
+ * This check analyzes the `module.exports` section of `metro.config.js`
+ * and compares the order of `withFacetpack` against other common wrappers
+ * such as Expo, Sentry, Reanimated, etc.
+ *
+ * Facetpack must be the innermost wrapper to guarantee that its transformer
+ * and resolver are not overridden by other integrations.
+ *
+ * If another wrapper is applied inside `withFacetpack`, a warning is reported
+ * with guidance on the correct order.
+ *
+ * @category Metro
+ */
 export const checkWrapperOrder: Check = {
   name: 'wrapper-order',
   category: 'Metro',

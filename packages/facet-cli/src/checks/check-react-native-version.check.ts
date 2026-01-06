@@ -2,6 +2,24 @@ import type { Check } from './types'
 
 const SUPPORTED_VERSIONS = ['0.79', '0.80', '0.81']
 
+/**
+ * Checks the installed React Native version and validates compatibility.
+ *
+ * @remarks
+ * This check reads the `react-native` version from `package.json`
+ * (both dependencies and devDependencies) and compares it against
+ * a list of officially supported versions.
+ *
+ * Only the major and minor version numbers are considered
+ * (e.g. `0.81.x` → `0.81`).
+ *
+ * @why
+ * Facetpack is tested against specific React Native versions.
+ * Using unsupported versions may lead to unexpected behavior
+ * or broken builds.
+ *
+ * @category Packages
+ */
 export const checkReactNativeVersion: Check = {
   name: 'react-native-version',
   category: 'Packages',
