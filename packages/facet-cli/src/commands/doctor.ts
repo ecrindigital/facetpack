@@ -2,7 +2,7 @@ import { defineCommand } from 'citty'
 import pc from 'picocolors'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { categories, type RuleContext, type CheckResult } from '../rules'
+import { getChecksByCategory, categoryIcons, categoryOrder, type CheckContext, type CheckResult } from '../checks'
 
 const VERSION = '0.1.0'
 
@@ -69,7 +69,7 @@ export const doctor = defineCommand({
       packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'))
     }
 
-    const ctx: RuleContext = {
+    const ctx: CheckContext = {
       cwd,
       packageJson,
       fix: args.fix,
@@ -82,17 +82,26 @@ export const doctor = defineCommand({
     let totalWarnings = 0
     let totalErrors = 0
 
-    for (const category of categories) {
-      console.log(`${pc.dim('├─')} ${category.icon} ${pc.bold(category.name)}`)
+    const checksByCategory = getChecksByCategory()
 
-      await spinner(`Checking ${category.name.toLowerCase()}...`, 100 + Math.random() * 150)
+    for (const category of categoryOrder) {
+      const categoryChecks = checksByCategory.get(category) ?? []
+      const icon = categoryIcons[category]
 
-      const results = await category.checks(ctx)
+      console.log(`${pc.dim('├─')} ${icon} ${pc.bold(category)}`)
 
-      for (const result of results) {
-        if (result.status === 'warning') totalWarnings++
-        if (result.status === 'error') totalErrors++
-        printCheck(result)
+      await spinner(`Checking ${category.toLowerCase()}...`, 100 + Math.random() * 150)
+
+      const results: CheckResult[] = []
+
+      for (const check of categoryChecks) {
+        const result = await check.run(ctx)
+        if (result) {
+          results.push(result)
+          if (result.status === 'warning') totalWarnings++
+          if (result.status === 'error') totalErrors++
+          printCheck(result)
+        }
       }
 
       if (results.length === 0) {
