@@ -12,10 +12,12 @@ import { checkFacetpackInstalled } from './check-facetpack-installed.check'
 import { checkFacetpackNativeInstalled } from './check-facetpack-native-installed.check'
 import { checkNativeBindingsLoaded } from './check-native-bindings-loaded.check'
 import { checkMetroConfigExists } from './check-metro-config-exists.check'
+import { checkMetroConfigValid } from './check-metro-config-valid.check'
 import { checkWithFacetpackApplied } from './check-with-facetpack-applied.check'
 import { checkTransformerConfigured } from './check-transformer-configured.check'
 import { checkResolverConfigured } from './check-resolver-configured.check'
-import { checkSentryConflict } from './check-sentry-conflict.check'
+import { checkSerializerConflict } from './check-serializer-conflict.check'
+import { checkWrapperOrder } from './check-wrapper-order.check'
 import { checkReactNativeVersion } from './check-react-native-version.check'
 import { checkExpoVersion } from './check-expo-version.check'
 import { checkReanimatedBabelFallback } from './check-reanimated-babel-fallback.check'
@@ -38,10 +40,12 @@ export const checks: Check[] = [
   checkFacetpackNativeInstalled,
   checkNativeBindingsLoaded,
   checkMetroConfigExists,
+  checkMetroConfigValid,
   checkWithFacetpackApplied,
   checkTransformerConfigured,
   checkResolverConfigured,
-  checkSentryConflict,
+  checkSerializerConflict,
+  checkWrapperOrder,
   checkReactNativeVersion,
   checkExpoVersion,
   checkReanimatedBabelFallback,
