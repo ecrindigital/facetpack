@@ -1,0 +1,61 @@
+{
+  "name": "@ecrindigital/facet-cli",
+  "version": "0.1.0",
+  "description": "Modern CLI for React Native development",
+  "type": "module",
+  "bin": {
+    "facet": "./bin/facet"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --format esm && bun run build:types",
+    "build:types": "bunx tsc",
+    "dev": "bun run ./src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run build"
+  },
+  "dependencies": {
+    "citty": "^0.1.6",
+    "@clack/prompts": "^0.8.2",
+    "picocolors": "^1.1.1",
+    "consola": "^3.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ecrindigital/facetpack.git",
+    "directory": "packages/facet-cli"
+  },
+  "author": {
+    "name": "Ecrin Digital",
+    "email": "contact@ecrin.digital",
+    "url": "https://ecrin.digital"
+  },
+  "license": "MIT",
+  "keywords": [
+    "react-native",
+    "cli",
+    "expo",
+    "metro",
+    "facet",
+    "facetpack"
+  ]
+}
