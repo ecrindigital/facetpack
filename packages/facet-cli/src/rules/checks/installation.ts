@@ -21,7 +21,6 @@ export const installation: CategoryCheck = {
       ...(ctx.packageJson.devDependencies as Record<string, string> || {}),
     }
 
-    // Facetpack main
     const facetpackVersion = deps['@ecrindigital/facetpack']
     if (facetpackVersion) {
       results.push({
@@ -36,7 +35,6 @@ export const installation: CategoryCheck = {
       })
     }
 
-    // Facetpack native
     const nativeVersion = deps['@ecrindigital/facetpack-native']
     if (nativeVersion) {
       results.push({
@@ -44,7 +42,6 @@ export const installation: CategoryCheck = {
         status: 'success',
       })
 
-      // Check native bindings
       const platform = `${process.platform}-${process.arch}`
       try {
         require.resolve('@ecrindigital/facetpack-native')

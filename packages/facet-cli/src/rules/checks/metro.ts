@@ -27,37 +27,39 @@ export const metro: CategoryCheck = {
 
     const content = readFileSync(configPath, 'utf-8')
 
-    // withFacetpack
-    if (content.includes('withFacetpack')) {
+    const isApplied = /module\.exports\s*=\s*withFacetpack\s*\(/.test(content)
+      || /exports\s*=\s*withFacetpack\s*\(/.test(content)
+
+    if (isApplied) {
       results.push({
         label: 'withFacetpack() applied',
         status: 'success',
+      })
+    } else if (content.includes('withFacetpack')) {
+      results.push({
+        label: 'withFacetpack()',
+        status: 'error',
+        detail: 'Imported but not applied — use module.exports = withFacetpack(config)',
       })
     } else {
       results.push({
         label: 'withFacetpack()',
         status: 'error',
-        detail: 'Not applied in metro.config.js',
+        detail: 'Not found — add withFacetpack() wrapper',
       })
     }
 
-    // Check transformer
-    if (content.includes('transformer') && content.includes('facetpack')) {
+    if (isApplied) {
       results.push({
         label: 'Transformer: facetpack',
         status: 'success',
       })
-    }
-
-    // Check resolver
-    if (content.includes('resolver') || content.includes('withFacetpack')) {
       results.push({
         label: 'Resolver: facetpack',
         status: 'success',
       })
     }
 
-    // Check for known conflicts
     if (content.includes('sentry') || content.includes('Sentry')) {
       results.push({
         label: 'Tree-shaking: disabled',
