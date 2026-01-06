@@ -2,8 +2,12 @@ import type { Check, CheckContext, CheckResult, CheckCategory } from './types'
 
 import { checkNodeVersion } from './check-node-version.check'
 import { checkBunInstalled } from './check-bun-installed.check'
+import { checkPackageManagerVersion } from './check-package-manager-version.check'
 import { checkPlatform } from './check-platform.check'
 import { checkWatchmanInstalled } from './check-watchman-installed.check'
+import { checkXcodeVersion } from './check-xcode-version.check'
+import { checkCocoapodsVersion } from './check-cocoapods-version.check'
+import { checkAndroidSdk } from './check-android-sdk.check'
 import { checkFacetpackInstalled } from './check-facetpack-installed.check'
 import { checkFacetpackNativeInstalled } from './check-facetpack-native-installed.check'
 import { checkNativeBindingsLoaded } from './check-native-bindings-loaded.check'
@@ -24,8 +28,12 @@ export type { Check, CheckContext, CheckResult, CheckCategory }
 export const checks: Check[] = [
   checkNodeVersion,
   checkBunInstalled,
+  checkPackageManagerVersion,
   checkPlatform,
   checkWatchmanInstalled,
+  checkXcodeVersion,
+  checkCocoapodsVersion,
+  checkAndroidSdk,
   checkFacetpackInstalled,
   checkFacetpackNativeInstalled,
   checkNativeBindingsLoaded,
