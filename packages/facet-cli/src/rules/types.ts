@@ -1,4 +1,4 @@
-export type RuleSeverity = 'error' | 'warning' | 'info'
+export type RuleSeverity = 'success' | 'warning' | 'error' | 'info'
 
 export interface RuleContext {
   cwd: string
@@ -6,14 +6,14 @@ export interface RuleContext {
   fix: boolean
 }
 
-export interface RuleDiagnostic {
-  message: string
-  severity: RuleSeverity
-  fix?: () => Promise<boolean>
+export interface CheckResult {
+  label: string
+  status: RuleSeverity
+  detail?: string
 }
 
-export interface Rule {
+export interface CategoryCheck {
   name: string
-  description: string
-  run: (ctx: RuleContext) => Promise<RuleDiagnostic | null>
+  icon: string
+  checks: (ctx: RuleContext) => Promise<CheckResult[]>
 }
