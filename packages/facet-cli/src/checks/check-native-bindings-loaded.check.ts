@@ -1,5 +1,24 @@
 import type { Check } from './types'
 
+/**
+ * Checks if the native Facetpack bindings are loaded correctly.
+ *
+ * @remarks
+ * Ensures that `@ecrindigital/facetpack-native` is installed and can be resolved at runtime.
+ * This is required for Rust-powered native features in Facetpack.
+ *
+ * @why
+ * Facetpack cannot function properly without loaded native bindings.
+ *
+ * @failure
+ * - Returns `warning` if the native bindings cannot be loaded.
+ *
+ * @fix
+ * - Ensure `@ecrindigital/facetpack-native` is installed.
+ * - Rebuild native bindings if necessary.
+ *
+ * @category Installation
+ */
 export const checkNativeBindingsLoaded: Check = {
   name: 'native-bindings-loaded',
   category: 'Installation',
