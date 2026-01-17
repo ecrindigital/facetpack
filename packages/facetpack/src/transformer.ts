@@ -258,7 +258,11 @@ function transformWithOxc(
     plugins: ['jsx'],
   })
 
-  return { ast }
+  return {
+    ast,
+    code: result.code,
+    map: result.map ? JSON.parse(result.map) : null,
+  }
 }
 
 export function setTransformerOptions(opts: FacetpackOptions): void {

@@ -1,10 +1,11 @@
-import { test, expect, describe } from 'bun:test'
+import { test, expect, describe, beforeEach } from 'bun:test'
 import {
   createFacetpackSerializer,
   type SerializerModule,
   type SerializerGraph,
   type SerializerOptions,
 } from '../serializer'
+import { resetStats, getStats } from '../stats'
 
 const createModule = (path: string, code: string, deps: Record<string, string> = {}): SerializerModule => ({
   path,
@@ -25,6 +26,10 @@ const createOptions = (dev = false): SerializerOptions => ({
 })
 
 describe('serializer', () => {
+  beforeEach(() => {
+    resetStats()
+  })
+
   describe('createFacetpackSerializer', () => {
     test('should create a serializer function', () => {
       const serializer = createFacetpackSerializer()
@@ -104,23 +109,16 @@ describe('serializer', () => {
     })
 
     test('should remove unused exports without side effects', async () => {
-      const logs: string[] = []
-      const originalLog = console.log
-      console.log = (...args: any[]) => logs.push(args.join(' '))
+      const serializer = createFacetpackSerializer(null, { treeShake: true })
+      const usedModule = createModule('/src/index.js', "import { a } from './lib'; console.log(a);", { './lib': '/src/lib.js' })
+      const libModule = createModule('/src/lib.js', 'export const a = 1; export const unused = 2;')
+      const graph = createGraph([usedModule, libModule], ['/src/index.js'])
+      const options = createOptions(false)
 
-      try {
-        const serializer = createFacetpackSerializer(null, { treeShake: true })
-        const usedModule = createModule('/src/index.js', "import { a } from './lib'; console.log(a);", { './lib': '/src/lib.js' })
-        const libModule = createModule('/src/lib.js', 'export const a = 1; export const unused = 2;')
-        const graph = createGraph([usedModule, libModule], ['/src/index.js'])
-        const options = createOptions(false)
+      await serializer('/src/index.js', [], graph, options)
 
-        await serializer('/src/index.js', [], graph, options)
-
-        expect(logs.some(l => l.includes('Tree-shaking'))).toBe(true)
-      } finally {
-        console.log = originalLog
-      }
+      const stats = getStats()
+      expect(stats.treeShaking.modulesAnalyzed).toBeGreaterThan(0)
     })
 
     test('should skip modules that are unused and have no side effects', async () => {

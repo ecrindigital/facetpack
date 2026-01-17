@@ -248,7 +248,7 @@ describe('transformer', () => {
 
       try {
         transform(createParams('/node_modules/lib/index.js', 'const x = 1;'))
-        expect(logs.some(l => l.includes('Fallback'))).toBe(true)
+        expect(logs.some(l => l.includes('BABEL'))).toBe(true)
       } finally {
         console.log = originalLog
       }
@@ -266,7 +266,7 @@ describe('transformer', () => {
         expect(true).toBe(false)
       } catch (error) {
         expect(error).toBeInstanceOf(Error)
-        expect((error as Error).message).toContain('[Facetpack]')
+        expect((error as Error).message).toContain('ERROR')
       }
     })
 

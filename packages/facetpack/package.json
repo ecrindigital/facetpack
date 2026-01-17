@@ -63,7 +63,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.24.0",
-    "@ecrindigital/facetpack-native": "^0.1.2"
+    "@ecrindigital/facetpack-native": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^22",
