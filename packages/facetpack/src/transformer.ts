@@ -122,6 +122,7 @@ const BABEL_REQUIRED_PATTERNS = [
   /useAnimatedGestureHandler/,
   /runOnUI/,
   /runOnJS/,
+  /export\s+class\s+\w+\s+extends\s+Component/,
 ]
 
 const HERMES_COMPAT_PATTERNS = [

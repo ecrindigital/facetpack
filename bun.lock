@@ -50,6 +50,7 @@
         "react-native": "0.81.5",
       },
       "devDependencies": {
+        "@ecrindigital/facet-cli": "workspace:*",
         "@types/react": "~19.1.0",
         "typescript": "~5.9.2",
       },
@@ -3254,8 +3255,6 @@
     "https-proxy-agent/debug": ["debug@4.4.3", "", { "dependencies": { "ms": "2.1.3" } }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
 
     "ignite-babel/expo": ["expo@54.0.12", "", { "dependencies": { "@babel/runtime": "7.28.4", "@expo/cli": "54.0.10", "@expo/config": "12.0.13", "@expo/config-plugins": "54.0.4", "@expo/devtools": "0.1.7", "@expo/fingerprint": "0.15.1", "@expo/metro": "54.0.0", "@expo/metro-config": "54.0.6", "@expo/vector-icons": "15.0.3", "@ungap/structured-clone": "1.3.0", "babel-preset-expo": "54.0.9", "expo-asset": "12.0.12", "expo-constants": "18.0.12", "expo-file-system": "19.0.21", "expo-font": "14.0.10", "expo-keep-awake": "15.0.8", "expo-modules-autolinking": "3.0.14", "expo-modules-core": "3.0.20", "pretty-format": "29.7.0", "react-refresh": "0.14.2", "whatwg-url-without-unicode": "8.0.0-3" }, "optionalDependencies": { "@expo/metro-runtime": "6.1.2" }, "peerDependencies": { "react": "19.1.0", "react-native": "0.81.4" }, "bin": { "expo": "bin/cli", "fingerprint": "bin/fingerprint", "expo-modules-autolinking": "bin/autolinking" } }, "sha512-BVvG1A9BlKAOBwczMi7XThOLzI3TUShkV/yRnAMGvQP5SQFDq7UojkZLLG285gg3OvkoqjMUE0tZvVXbvuI4tA=="],
-
-    "ignite-facetpack/@ecrindigital/facetpack": ["@ecrindigital/facetpack@file:packages/facetpack", { "dependencies": { "@babel/parser": "^7.24.0", "@ecrindigital/facetpack-native": "^0.1.2" }, "devDependencies": { "@types/node": "^22", "metro": "^0.81.0", "metro-config": "^0.81.0", "typescript": "^5.7.0" }, "peerDependencies": { "metro": ">=0.80.0", "metro-config": ">=0.80.0" } }],
 
     "ignite-facetpack/expo": ["expo@54.0.12", "", { "dependencies": { "@babel/runtime": "7.28.4", "@expo/cli": "54.0.10", "@expo/config": "12.0.13", "@expo/config-plugins": "54.0.4", "@expo/devtools": "0.1.7", "@expo/fingerprint": "0.15.1", "@expo/metro": "54.0.0", "@expo/metro-config": "54.0.6", "@expo/vector-icons": "15.0.3", "@ungap/structured-clone": "1.3.0", "babel-preset-expo": "54.0.9", "expo-asset": "12.0.12", "expo-constants": "18.0.12", "expo-file-system": "19.0.21", "expo-font": "14.0.10", "expo-keep-awake": "15.0.8", "expo-modules-autolinking": "3.0.14", "expo-modules-core": "3.0.20", "pretty-format": "29.7.0", "react-refresh": "0.14.2", "whatwg-url-without-unicode": "8.0.0-3" }, "optionalDependencies": { "@expo/metro-runtime": "6.1.2" }, "peerDependencies": { "react": "19.1.0", "react-native": "0.81.4" }, "bin": { "expo": "bin/cli", "fingerprint": "bin/fingerprint", "expo-modules-autolinking": "bin/autolinking" } }, "sha512-BVvG1A9BlKAOBwczMi7XThOLzI3TUShkV/yRnAMGvQP5SQFDq7UojkZLLG285gg3OvkoqjMUE0tZvVXbvuI4tA=="],
 

@@ -1,6 +1,6 @@
 /* eslint-env node */
 const { getDefaultConfig } = require("expo/metro-config")
-const { withFacetpack } = require("facetpack")
+const { withFacetpack } = require("@ecrindigital/facetpack")
 
 const config = getDefaultConfig(__dirname)
 
