@@ -25,6 +25,7 @@ oxc_resolver = "4"
 oxc_minifier = "0.104.0"
 
 thiserror = "1.0"
+regex = "1"
 
 [build-dependencies]
 napi-build = "2"

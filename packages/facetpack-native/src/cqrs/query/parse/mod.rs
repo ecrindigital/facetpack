@@ -1,18 +1,26 @@
+mod analyzers;
+mod context;
+mod error_info;
+
 use crate::cqrs::traits::Query;
 use crate::domain::error::FacetpackError;
 use crate::domain::types::{Diagnostic, DiagnosticSeverity, ParseOptions, ParseResult, SourceType};
 
+use analyzers::AnalyzerRegistry;
+use context::ComponentContextDetector;
+
 use oxc_allocator::Allocator;
 use oxc_ast::ast::Program;
 use oxc_codegen::Codegen;
-use oxc_diagnostics::{GraphicalReportHandler, GraphicalTheme, NamedSource};
 use oxc_parser::Parser;
 use oxc_span::SourceType as OxcSourceType;
 
+/// Query for parsing source code into an AST
 pub struct ParseQuery {
   pub filename: String,
   pub source_text: String,
   pub options: ParseOptions,
+  analyzer_registry: AnalyzerRegistry,
 }
 
 impl ParseQuery {
@@ -21,6 +29,7 @@ impl ParseQuery {
       filename,
       source_text,
       options: options.unwrap_or_default(),
+      analyzer_registry: AnalyzerRegistry::new(),
     }
   }
 
@@ -71,71 +80,48 @@ impl Query for ParseQuery {
 impl ParseQuery {
   fn create_diagnostic(&self, error: &oxc_diagnostics::OxcDiagnostic) -> Diagnostic {
     let message = error.message.to_string();
-    let formatted = self.render_diagnostic(error);
     let (line, column) = self.extract_position(error);
-    let help = self.get_help_text(&message);
-    let suggestion = self.get_suggestion(&message);
-    let code = Some(self.get_error_code(&message));
-    let snippet = self.get_snippet_at_line(line);
+    let snippet = self.get_snippet_context(line, 2);
 
-    Diagnostic {
+    // Detect component context
+    let context_detector = ComponentContextDetector::new(&self.source_text);
+    let component_context = context_detector.detect(line);
+
+    // Analyze the error using the registry
+    let error_info = self.analyzer_registry.analyze(&message, &snippet, column);
+
+    // Build help text with component context if available
+    let help_text = match &component_context {
+      Some(comp) => format!("Dans {} → {}", comp, error_info.help),
+      None => error_info.help,
+    };
+
+    let mut diag = Diagnostic {
       severity: DiagnosticSeverity::Error,
-      code,
-      message,
+      code: Some(error_info.code),
+      message: error_info.message,
       filename: self.filename.clone(),
       line,
       column,
       end_line: None,
       end_column: None,
-      snippet,
+      snippet: Some(snippet),
       label: None,
-      help,
-      suggestion,
-      formatted,
-    }
-  }
-
-  fn render_diagnostic(&self, error: &oxc_diagnostics::OxcDiagnostic) -> String {
-    let enhanced = self.enhance_with_help(error);
-
-    let handler = GraphicalReportHandler::new_themed(GraphicalTheme::unicode())
-      .with_context_lines(3);
-
-    let source = NamedSource::new(&self.filename, self.source_text.clone());
-    let error_with_source = enhanced.with_source_code(source);
-
-    let mut output = String::new();
-    handler.render_report(&mut output, error_with_source.as_ref()).ok();
-    output
-  }
-
-  fn enhance_with_help(&self, error: &oxc_diagnostics::OxcDiagnostic) -> oxc_diagnostics::OxcDiagnostic {
-    let msg = error.message.to_string();
-
-    let help: Option<&str> = if msg.contains("Expected `}` but found") {
-      Some("Add the missing closing brace `}` to match the opening `{`")
-    } else if msg.contains("Expected `,`") || msg.contains("Expected `}`") {
-      Some("Check for missing punctuation or unclosed brackets")
-    } else if msg.contains("Unexpected token") {
-      Some("Check for missing operators, brackets, or typos near this location")
-    } else if msg.contains("Unterminated string") || msg.contains("Unterminated") {
-      Some("Add a closing quote to terminate the string literal")
-    } else if msg.contains("reserved word") || msg.contains("reserved") {
-      Some("Use a different identifier - this is a JavaScript reserved keyword")
-    } else if msg.contains("return") && msg.contains("function") {
-      Some("The `return` statement can only be used inside a function body")
-    } else if msg.contains("await") {
-      Some("The `await` keyword can only be used inside an async function")
-    } else if msg.contains("import") || msg.contains("export") {
-      Some("Import/export statements are only allowed in ES modules")
-    } else {
-      None
+      help: Some(help_text),
+      suggestion: Some(error_info.suggestion),
+      formatted: String::new(),
     };
 
-    match help {
-      Some(text) => error.clone().with_help(text),
-      None => error.clone(),
-    }
+    diag.formatted = diag.format();
+    diag
+  }
+
+  fn get_snippet_context(&self, line: u32, context_lines: u32) -> String {
+    let lines: Vec<&str> = self.source_text.lines().collect();
+    let start = line.saturating_sub(context_lines + 1) as usize;
+    let end = std::cmp::min(line as usize + context_lines as usize, lines.len());
+
+    lines[start..end].join("\n")
   }
 
   fn extract_position(&self, error: &oxc_diagnostics::OxcDiagnostic) -> (u32, u32) {
@@ -163,62 +149,6 @@ impl ParseQuery {
       }
     }
     (line, col)
-  }
-
-  fn get_snippet_at_line(&self, line: u32) -> Option<String> {
-    self
-      .source_text
-      .lines()
-      .nth(line.saturating_sub(1) as usize)
-      .map(|s| s.to_string())
-  }
-
-  fn get_error_code(&self, message: &str) -> String {
-    if message.contains("Expected") && message.contains("but found") {
-      "E0001".to_string()
-    } else if message.contains("Unexpected token") {
-      "E0002".to_string()
-    } else if message.contains("Unterminated") {
-      "E0003".to_string()
-    } else if message.contains("reserved word") || message.contains("reserved") {
-      "E0004".to_string()
-    } else if message.contains("return") {
-      "E0005".to_string()
-    } else if message.contains("await") {
-      "E0006".to_string()
-    } else if message.contains("import") || message.contains("export") {
-      "E0007".to_string()
-    } else {
-      "E0000".to_string()
-    }
-  }
-
-  fn get_help_text(&self, message: &str) -> Option<String> {
-    if message.contains("Expected `}` but found") {
-      Some("Add the missing closing brace `}` to match the opening `{`".to_string())
-    } else if message.contains("Expected `,`") || message.contains("Expected `}`") {
-      Some("Check for missing punctuation or unclosed brackets".to_string())
-    } else if message.contains("Unexpected token") {
-      Some("Check for missing operators, brackets, or typos near this location".to_string())
-    } else if message.contains("Unterminated string") || message.contains("Unterminated") {
-      Some("Add a closing quote to terminate the string literal".to_string())
-    } else if message.contains("reserved word") || message.contains("reserved") {
-      Some("Use a different identifier - this is a JavaScript reserved keyword".to_string())
-    } else if message.contains("return") && message.contains("function") {
-      Some("The `return` statement can only be used inside a function body".to_string())
-    } else {
-      None
-    }
-  }
-
-  fn get_suggestion(&self, message: &str) -> Option<String> {
-    if message.contains("Unterminated string") {
-      Some("Add `\"` at the end of the string".to_string())
-    } else if message.contains("Expected `}`") {
-      Some("Add `}` to close the block".to_string())
-    } else {
-      None
-    }
   }
 }
 

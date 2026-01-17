@@ -33,80 +33,107 @@ impl Diagnostic {
   const YELLOW: &'static str = "\x1b[33m";
   const BLUE: &'static str = "\x1b[34m";
   const CYAN: &'static str = "\x1b[36m";
+  const GREEN: &'static str = "\x1b[32m";
+  const WHITE: &'static str = "\x1b[37m";
+  const GRAY: &'static str = "\x1b[90m";
   const BOLD: &'static str = "\x1b[1m";
+  const UNDERLINE: &'static str = "\x1b[4m";
   const RESET: &'static str = "\x1b[0m";
 
   pub fn format(&self) -> String {
     let mut output = String::new();
 
-    let (severity, color) = match self.severity {
-      DiagnosticSeverity::Error => ("error", Self::RED),
-      DiagnosticSeverity::Warning => ("warning", Self::YELLOW),
-      DiagnosticSeverity::Info => ("info", Self::CYAN),
-      DiagnosticSeverity::Hint => ("hint", Self::BLUE),
+    let (severity_text, icon, color) = match self.severity {
+      DiagnosticSeverity::Error => ("ERROR", "✖", Self::RED),
+      DiagnosticSeverity::Warning => ("WARNING", "⚠", Self::YELLOW),
+      DiagnosticSeverity::Info => ("INFO", "ℹ", Self::CYAN),
+      DiagnosticSeverity::Hint => ("HINT", "💡", Self::BLUE),
     };
 
-    let code_str = self
-      .code
-      .as_ref()
-      .map(|c| format!("[{}]", c))
-      .unwrap_or_default();
-
     output.push_str(&format!(
-      "{}{}{}{}:{} {}\n",
+      "\n{}{}{} {} {}{}\n",
       Self::BOLD,
       color,
-      severity,
-      code_str,
+      icon,
+      severity_text,
       Self::RESET,
-      self.message
+      self.code.as_ref().map(|c| format!("{}[{}]{}", Self::GRAY, c, Self::RESET)).unwrap_or_default()
     ));
 
     output.push_str(&format!(
-      "  {}-->{} {}:{}:{}\n",
-      Self::BLUE,
+      "{}{}  {}{}\n",
+      Self::BOLD,
+      Self::WHITE,
+      self.message,
+      Self::RESET
+    ));
+
+    output.push_str(&format!(
+      "\n  {}→{} {}{}{}:{}:{}{}\n",
+      Self::CYAN,
       Self::RESET,
+      Self::UNDERLINE,
       self.filename,
+      Self::RESET,
       self.line,
-      self.column
+      self.column,
+      Self::RESET
     ));
 
     if let Some(snippet) = &self.snippet {
-      output.push_str(&format!("   {}|{}\n", Self::BLUE, Self::RESET));
+      output.push_str(&format!("\n  {}┌──────────────────────────────────────{}\n", Self::GRAY, Self::RESET));
+
       for (i, line) in snippet.lines().enumerate() {
         let line_num = self.line as usize + i;
-        output.push_str(&format!(
-          "{}{:3}{} {}|{} {}\n",
-          Self::BLUE,
-          line_num,
-          Self::RESET,
-          Self::BLUE,
-          Self::RESET,
-          line
-        ));
+        let is_error_line = i == 0;
+
+        if is_error_line {
+          output.push_str(&format!(
+            "  {}│{} {}{}{:>4}{} {} {}{}{}\n",
+            Self::GRAY,
+            Self::RESET,
+            Self::RED,
+            Self::BOLD,
+            line_num,
+            Self::RESET,
+            Self::GRAY,
+            Self::RESET,
+            line,
+            Self::RESET
+          ));
+
+          let padding = " ".repeat(self.column.saturating_sub(1) as usize + 8);
+          let caret_len = std::cmp::min(3, line.len().saturating_sub(self.column.saturating_sub(1) as usize));
+          let carets = "^".repeat(std::cmp::max(1, caret_len));
+          output.push_str(&format!(
+            "  {}│{} {}{}{}{}\n",
+            Self::GRAY,
+            Self::RESET,
+            padding,
+            color,
+            carets,
+            Self::RESET
+          ));
+        } else {
+          output.push_str(&format!(
+            "  {}│{} {}{:>4}{} {} {}\n",
+            Self::GRAY,
+            Self::RESET,
+            Self::GRAY,
+            line_num,
+            Self::RESET,
+            Self::GRAY,
+            line
+          ));
+        }
       }
-      if let Some(label) = &self.label {
-        let padding = " ".repeat(self.column.saturating_sub(1) as usize);
-        output.push_str(&format!(
-          "    {}|{} {}{}^{} {}{}{}\n",
-          Self::BLUE,
-          Self::RESET,
-          padding,
-          color,
-          Self::RESET,
-          color,
-          label,
-          Self::RESET
-        ));
-      }
-      output.push_str(&format!("   {}|{}\n", Self::BLUE, Self::RESET));
+
+      output.push_str(&format!("  {}└──────────────────────────────────────{}\n", Self::GRAY, Self::RESET));
     }
 
     if let Some(help) = &self.help {
       output.push_str(&format!(
-        "  {}={} {}help:{} {}\n",
-        Self::BLUE,
-        Self::RESET,
+        "\n  {}💡 Contexte:{} {}\n",
         Self::CYAN,
         Self::RESET,
         help
@@ -115,15 +142,14 @@ impl Diagnostic {
 
     if let Some(suggestion) = &self.suggestion {
       output.push_str(&format!(
-        "  {}={} {}suggestion:{} {}\n",
-        Self::BLUE,
-        Self::RESET,
-        Self::CYAN,
+        "\n  {}✨ Solution:{} {}\n",
+        Self::GREEN,
         Self::RESET,
         suggestion
       ));
     }
 
+    output.push('\n');
     output
   }
 }

@@ -227,8 +227,12 @@ function transformWithOxc(
 ): TransformResult {
   const parseResult = parseSync(filename, src)
 
-  if (parseResult.errors.length > 0 && parseResult.diagnostics.length > 0) {
-    throw new Error(`\n${formatDiagnostics(parseResult.diagnostics)}`)
+  if (parseResult.errors.length > 0) {
+    const error = parseResult.diagnostics.length > 0
+      ? new Error(`\n${formatDiagnostics(parseResult.diagnostics)}`)
+      : new Error(`Parse error in ${filename}:\n${parseResult.errors.join('\n')}`)
+    ;(error as any).isParseError = true
+    throw error
   }
 
   const isClassic = opts.jsxRuntime === 'classic'
@@ -278,6 +282,9 @@ export function transform(params: TransformParams): TransformResult {
   try {
     return transformWithOxc(filename, src, opts, metroOptions.dev)
   } catch (error) {
+    if ((error as any).isParseError) {
+      throw error
+    }
     logger.logFallback(filename, error)
     globalStats.adjustTransformFallback()
     return fallback.get().transform(params)
