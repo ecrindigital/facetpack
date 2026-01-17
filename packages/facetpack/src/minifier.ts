@@ -1,4 +1,5 @@
 import { minifySync, type MinifyOptions as NativeMinifyOptions } from '@ecrindigital/facetpack-native'
+import { globalStats } from './stats'
 
 export interface MinifierConfig {
   compress?: boolean
@@ -31,7 +32,11 @@ export function minify(input: MetroMinifyInput): MetroMinifyOutput {
     sourcemap: input.map !== undefined,
   }
 
+  const originalSize = Buffer.byteLength(input.code, 'utf8')
   const result = minifySync(input.code, input.filename, options)
+  const minifiedSize = Buffer.byteLength(result.code, 'utf8')
+
+  globalStats.recordMinify(originalSize, minifiedSize)
 
   return {
     code: result.code,
@@ -53,7 +58,11 @@ export function minifyCode(
     sourcemap: false,
   }
 
+  const originalSize = Buffer.byteLength(code, 'utf8')
   const result = minifySync(code, filename, nativeOptions)
+  const minifiedSize = Buffer.byteLength(result.code, 'utf8')
+
+  globalStats.recordMinify(originalSize, minifiedSize)
 
   return {
     code: result.code,

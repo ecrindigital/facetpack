@@ -2,16 +2,9 @@ import { transformSync, JsxRuntime, resolveBatchSync, parseSync } from '@ecrindi
 import { parse } from '@babel/parser'
 import type { TransformParams, TransformResult, FacetpackOptions } from './types'
 import { setCachedResolutions } from './cache'
+import { globalStats } from './stats'
 
 type TransformDecision = 'oxc' | 'babel'
-
-interface TransformStats {
-  oxc: number
-  babel: number
-  total: number
-  oxcFiles: string[]
-  babelFiles: string[]
-}
 
 interface Transformer {
   transform: (params: TransformParams) => TransformResult
@@ -21,7 +14,6 @@ const ANSI = {
   green: '\x1b[32m',
   yellow: '\x1b[33m',
   cyan: '\x1b[36m',
-  white: '\x1b[37m',
   bold: '\x1b[1m',
   reset: '\x1b[0m',
 } as const
@@ -57,76 +49,6 @@ const DEFAULT_OPTIONS: Required<FacetpackOptions> = {
   minifier: true,
   treeShake: true,
   noAst: false,
-}
-
-class StatsManager {
-  private stats: TransformStats = this.createEmptyStats()
-  private exitHandlerRegistered = false
-
-  private createEmptyStats(): TransformStats {
-    return { oxc: 0, babel: 0, total: 0, oxcFiles: [], babelFiles: [] }
-  }
-
-  record(decision: TransformDecision, filename: string): void {
-    this.stats.total++
-    const isVerbose = process.env.FACETPACK_DEBUG === 'verbose'
-
-    if (decision === 'oxc') {
-      this.stats.oxc++
-      if (isVerbose) this.stats.oxcFiles.push(filename)
-    } else {
-      this.stats.babel++
-      if (isVerbose) this.stats.babelFiles.push(filename)
-    }
-  }
-
-  adjustForFallback(): void {
-    this.stats.oxc--
-    this.stats.babel++
-  }
-
-  get(): TransformStats {
-    return { ...this.stats }
-  }
-
-  reset(): void {
-    this.stats = this.createEmptyStats()
-  }
-
-  print(): void {
-    if (!process.env.FACETPACK_DEBUG || this.stats.total === 0) return
-
-    const { oxc, babel, total } = this.stats
-    const oxcPercent = ((oxc / total) * 100).toFixed(1)
-    const babelPercent = ((babel / total) * 100).toFixed(1)
-    const { cyan, green, yellow, white, bold, reset } = ANSI
-
-    console.log('\n')
-    console.log(`${bold}${cyan}╔══════════════════════════════════════════════════════════════╗${reset}`)
-    console.log(`${bold}${cyan}║${reset}              ${bold}FACETPACK TRANSFORM STATS${reset}                     ${cyan}║${reset}`)
-    console.log(`${bold}${cyan}╠══════════════════════════════════════════════════════════════╣${reset}`)
-    console.log(`${cyan}║${reset}                                                              ${cyan}║${reset}`)
-    console.log(`${cyan}║${reset}  ${green}●${reset} OXC (fast)     ${bold}${green}${oxc.toString().padStart(6)}${reset} files   ${green}${oxcPercent.padStart(6)}%${reset}            ${cyan}║${reset}`)
-    console.log(`${cyan}║${reset}  ${yellow}●${reset} Babel         ${bold}${yellow}${babel.toString().padStart(6)}${reset} files   ${yellow}${babelPercent.padStart(6)}%${reset}            ${cyan}║${reset}`)
-    console.log(`${cyan}║${reset}  ${white}─────────────────────────────────────${reset}                      ${cyan}║${reset}`)
-    console.log(`${cyan}║${reset}  ${bold}Total${reset}            ${bold}${total.toString().padStart(6)}${reset} files                          ${cyan}║${reset}`)
-    console.log(`${cyan}║${reset}                                                              ${cyan}║${reset}`)
-    console.log(`${bold}${cyan}╚══════════════════════════════════════════════════════════════╝${reset}`)
-    console.log('\n')
-  }
-
-  registerExitHandler(): void {
-    if (this.exitHandlerRegistered) return
-    this.exitHandlerRegistered = true
-
-    const printAndExit = () => {
-      this.print()
-      process.exit(0)
-    }
-
-    process.on('SIGINT', printAndExit)
-    process.on('beforeExit', () => this.print())
-  }
 }
 
 class Logger {
@@ -200,7 +122,6 @@ class FallbackTransformerManager {
   }
 }
 
-const stats = new StatsManager()
 const logger = new Logger()
 const options = new OptionsManager()
 const fallback = new FallbackTransformerManager()
@@ -235,7 +156,12 @@ function preResolveImports(filename: string, code: string, sourceExts: string[])
   const resolutions = new Map<string, string | null>()
   for (let i = 0; i < specifiers.length; i++) {
     const specifier = specifiers[i]
-    if (specifier) resolutions.set(specifier, results[i]?.path ?? null)
+    if (specifier) {
+      resolutions.set(specifier, results[i]?.path ?? null)
+      if (results[i]?.path) {
+        globalStats.recordResolve('facetpack')
+      }
+    }
   }
 
   setCachedResolutions(filename, resolutions)
@@ -321,6 +247,7 @@ function transformWithOxc(
   }
 
   preResolveImports(filename, result.code, opts.sourceExts)
+  globalStats.flush()
 
   const ast = parse(result.code, {
     sourceType: 'unambiguous',
@@ -338,10 +265,10 @@ export function transform(params: TransformParams): TransformResult {
   const { filename, src, options: metroOptions } = params
   const opts = options.get()
 
-  stats.registerExitHandler()
+  globalStats.registerExitHandler()
 
   const decision = getTransformDecision(filename, src, opts)
-  stats.record(decision, filename)
+  globalStats.recordTransform(decision)
   logger.logTransform(decision, filename)
 
   if (decision === 'babel') {
@@ -352,7 +279,7 @@ export function transform(params: TransformParams): TransformResult {
     return transformWithOxc(filename, src, opts, metroOptions.dev)
   } catch (error) {
     logger.logFallback(filename, error)
-    stats.adjustForFallback()
+    globalStats.adjustTransformFallback()
     return fallback.get().transform(params)
   }
 }
@@ -365,6 +292,8 @@ export function createTransformer(customOptions: FacetpackOptions = {}): Transfo
       const { filename, src, options: metroOptions } = params
       const decision = getTransformDecision(filename, src, opts)
 
+      globalStats.recordTransform(decision)
+
       if (decision === 'babel') {
         return fallback.get().transform(params)
       }
@@ -372,16 +301,4 @@ export function createTransformer(customOptions: FacetpackOptions = {}): Transfo
       return transformWithOxc(filename, src, opts, metroOptions.dev)
     },
   }
-}
-
-export function printStats(): void {
-  stats.print()
-}
-
-export function resetStats(): void {
-  stats.reset()
-}
-
-export function getStats(): TransformStats {
-  return stats.get()
 }

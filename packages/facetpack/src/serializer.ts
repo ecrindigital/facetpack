@@ -3,6 +3,7 @@ import {
   shakeSync,
   type ModuleAnalysis,
 } from '@ecrindigital/facetpack-native'
+import { globalStats } from './stats'
 
 export interface SerializerModule {
   path: string
@@ -44,22 +45,6 @@ export interface FacetpackSerializerConfig {
   treeShake?: boolean
 }
 
-/**
- * Creates a Facetpack serializer with tree-shaking support.
- * This serializer can be composed with existing Metro serializers.
- *
- * @example
- * ```js
- * // metro.config.js
- * const { createFacetpackSerializer } = require('@ecrindigital/facetpack')
- *
- * module.exports = {
- *   serializer: {
- *     customSerializer: createFacetpackSerializer(null, { treeShake: true }),
- *   },
- * }
- * ```
- */
 export function createFacetpackSerializer(
   existingSerializer?: CustomSerializer | null,
   config: FacetpackSerializerConfig = {}
@@ -71,13 +56,19 @@ export function createFacetpackSerializer(
     options: SerializerOptions
   ) => {
     if (options.dev || config.treeShake === false) {
+      let result
       if (existingSerializer) {
-        return existingSerializer(entryPoint, preModules, graph, options)
+        result = await existingSerializer(entryPoint, preModules, graph, options)
+      } else {
+        result = defaultSerialize(entryPoint, preModules, graph, options)
       }
-      return defaultSerialize(entryPoint, preModules, graph, options)
+      globalStats.print()
+      return result
     }
 
     const analyses = new Map<string, ModuleAnalysis>()
+    let modulesAnalyzed = 0
+
     for (const [path, module] of graph.dependencies) {
       if (path.includes('node_modules')) {
         continue
@@ -87,6 +78,7 @@ export function createFacetpackSerializer(
         const code = module.output[0]?.data?.code ?? ''
         const analysis = analyzeSync(path, code)
         analyses.set(path, analysis)
+        modulesAnalyzed++
       } catch {
         analyses.set(path, {
           exports: [],
@@ -99,7 +91,8 @@ export function createFacetpackSerializer(
     const usedExports = computeUsedExports(entryPoint, analyses, graph)
 
     const shakenModules = new Map<string, { code: string; map?: string }>()
-    let totalRemoved = 0
+    let modulesRemoved = 0
+    let exportsRemoved = 0
 
     for (const [path, module] of graph.dependencies) {
       if (path.includes('node_modules')) {
@@ -112,7 +105,7 @@ export function createFacetpackSerializer(
       const analysis = analyses.get(path)
 
       if ((!used || used.size === 0) && analysis && !analysis.hasSideEffects) {
-        totalRemoved++
+        modulesRemoved++
         continue
       }
 
@@ -121,23 +114,25 @@ export function createFacetpackSerializer(
         const usedArray = used ? Array.from(used) : ['*']
         const result = shakeSync(path, code, usedArray)
         shakenModules.set(path, { code: result.code, map: result.map ?? undefined })
-        totalRemoved += result.removedExports.length
+        exportsRemoved += result.removedExports.length
       } catch {
         const code = module.output[0]?.data?.code ?? ''
         shakenModules.set(path, { code })
       }
     }
 
-    if (totalRemoved > 0) {
-      console.log(`[facetpack] Tree-shaking removed ${totalRemoved} unused exports`)
-    }
+    globalStats.recordTreeShaking(modulesAnalyzed, modulesRemoved, exportsRemoved)
 
+    let result
     if (existingSerializer) {
       const shakenGraph = createShakenGraph(graph, shakenModules)
-      return existingSerializer(entryPoint, preModules, shakenGraph, options)
+      result = await existingSerializer(entryPoint, preModules, shakenGraph, options)
+    } else {
+      result = defaultSerialize(entryPoint, preModules, graph, options, shakenModules)
     }
 
-    return defaultSerialize(entryPoint, preModules, graph, options, shakenModules)
+    globalStats.print()
+    return result
   }
 }
 
