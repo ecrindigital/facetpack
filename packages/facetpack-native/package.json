@@ -1,6 +1,6 @@
 {
   "name": "@ecrindigital/facetpack-native",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Native bindings for Facetpack - OXC-powered transformer and resolver",
   "main": "index.js",
   "repository": {
@@ -121,10 +121,10 @@
   },
   "packageManager": "yarn@4.12.0",
   "optionalDependencies": {
-    "@ecrindigital/facetpack-native-win32-x64-msvc": "0.1.4",
-    "@ecrindigital/facetpack-native-darwin-x64": "0.1.4",
-    "@ecrindigital/facetpack-native-linux-x64-gnu": "0.1.4",
-    "@ecrindigital/facetpack-native-darwin-arm64": "0.1.4",
-    "@ecrindigital/facetpack-native-linux-arm64-gnu": "0.1.4"
+    "@ecrindigital/facetpack-native-win32-x64-msvc": "0.2.0",
+    "@ecrindigital/facetpack-native-darwin-x64": "0.2.0",
+    "@ecrindigital/facetpack-native-linux-x64-gnu": "0.2.0",
+    "@ecrindigital/facetpack-native-darwin-arm64": "0.2.0",
+    "@ecrindigital/facetpack-native-linux-arm64-gnu": "0.2.0"
   }
 }
