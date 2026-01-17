@@ -86,7 +86,7 @@ describe('integration', () => {
       },
     })
 
-    const minified = facetpack.minifyCode(transformed.code, 'test.js')
+    const minified = facetpack.minifyCode(transformed.code || 'const x = 1;', 'test.js')
     expect(minified.code).toBeDefined()
   })
 

@@ -71,6 +71,7 @@ export interface TransformOptions {
 
 export interface TransformResult {
   ast?: object
-  code: string
+  code?: string
   map?: object | null
+  metadata?: Record<string, unknown>
 }

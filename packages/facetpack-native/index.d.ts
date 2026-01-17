@@ -132,6 +132,7 @@ export interface TransformOptions {
   jsxPragmaFrag?: string
   jsxImportSource?: string
   typescript?: boolean
+  flow?: boolean
   sourcemap?: boolean
 }
 

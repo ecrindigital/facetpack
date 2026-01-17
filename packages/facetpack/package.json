@@ -75,7 +75,7 @@
     "build": "bun build ./src/index.ts ./src/transformer.ts ./src/minifier.ts ./src/serializer.ts --outdir ./dist --target node --format esm --external @ecrindigital/facetpack-native --external @babel/parser && bun run build:cjs && bun run build:types",
     "build:cjs": "bun build ./src/index.ts --outfile ./dist/index.cjs --target node --format cjs --external @ecrindigital/facetpack-native --external @babel/parser && bun build ./src/transformer.ts --outfile ./dist/transformer.cjs --target node --format cjs --external @ecrindigital/facetpack-native --external @babel/parser && bun build ./src/minifier.ts --outfile ./dist/minifier.cjs --target node --format cjs --external @ecrindigital/facetpack-native --external @babel/parser && bun build ./src/serializer.ts --outfile ./dist/serializer.cjs --target node --format cjs --external @ecrindigital/facetpack-native --external @babel/parser",
     "build:types": "bunx tsc",
-    "dev": "bun build ./src/index.ts --outdir ./dist --target node --watch",
+    "dev": "bun build ./src/index.ts ./src/transformer.ts ./src/minifier.ts ./src/serializer.ts --outdir ./dist --target node --format esm --external @ecrindigital/facetpack-native --external @babel/parser --watch",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "clean": "rm -rf dist",

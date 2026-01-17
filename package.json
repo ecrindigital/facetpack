@@ -10,7 +10,9 @@
     "test:all": "bun run --filter './packages/*' test",
     "build:all": "bun run --filter './packages/*' build",
     "cli": "bun run cli:build && ./packages/facet-cli/bin/facet",
-    "cli:build": "bun run --filter '@ecrindigital/facet-cli' build"
+    "cli:build": "bun run --filter '@ecrindigital/facet-cli' build",
+    "dev": "bun run build:all && bun run --filter '@ecrindigital/facetpack' dev",
+    "dev:reanimated": "cd examples/expo-reanimated && bun run ios"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -173,6 +173,7 @@ pub struct TransformOptions {
   pub jsx_pragma_frag: Option<String>,
   pub jsx_import_source: Option<String>,
   pub typescript: Option<bool>,
+  pub flow: Option<bool>,
   pub sourcemap: Option<bool>,
 }
 

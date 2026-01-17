@@ -10,9 +10,10 @@ use oxc_parser::Parser;
 use oxc_semantic::SemanticBuilder;
 use oxc_span::SourceType as OxcSourceType;
 use oxc_transformer::{
-  JsxOptions, JsxRuntime as OxcJsxRuntime, TransformOptions as OxcTransformOptions, Transformer,
-  TypeScriptOptions,
+  EnvOptions, HelperLoaderMode, HelperLoaderOptions, JsxOptions, JsxRuntime as OxcJsxRuntime,
+  TransformOptions as OxcTransformOptions, Transformer, TypeScriptOptions,
 };
+use std::borrow::Cow;
 
 pub struct TransformCommand {
   pub filename: String,
@@ -42,6 +43,15 @@ impl TransformCommand {
 
   fn build_transform_options(&self) -> OxcTransformOptions {
     let mut transform_options = OxcTransformOptions::default();
+
+    if let Ok(env) = EnvOptions::from_target("es2020") {
+      transform_options.env = env;
+    }
+
+    transform_options.helper_loader = HelperLoaderOptions {
+      module_name: Cow::Borrowed("@babel/runtime"),
+      mode: HelperLoaderMode::Runtime,
+    };
 
     if self.options.jsx.unwrap_or(true) {
       let runtime = match self.options.jsx_runtime {
