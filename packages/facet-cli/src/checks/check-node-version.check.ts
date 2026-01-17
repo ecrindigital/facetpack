@@ -1,5 +1,7 @@
 import type { Check } from './types'
 
+const MIN_NODE_VERSION = 18
+
 /**
  * Checks if the installed Node.js version meets the minimum requirement.
  *

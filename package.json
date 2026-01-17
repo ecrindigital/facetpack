@@ -8,7 +8,9 @@
   ],
   "scripts": {
     "test:all": "bun run --filter './packages/*' test",
-    "build:all": "bun run --filter './packages/*' build"
+    "build:all": "bun run --filter './packages/*' build",
+    "cli": "bun run cli:build && ./packages/facet-cli/bin/facet",
+    "cli:build": "bun run --filter '@ecrindigital/facet-cli' build"
   },
   "devDependencies": {
     "@types/bun": "latest"
