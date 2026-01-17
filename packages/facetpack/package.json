@@ -1,6 +1,6 @@
 {
   "name": "@ecrindigital/facetpack",
-  "version": "0.1.10",
+  "version": "0.2.0",
   "description": "High-performance Metro transformer powered by OXC",
   "type": "module",
   "main": "dist/index.js",
