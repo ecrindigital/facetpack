@@ -14,6 +14,7 @@ jobs:
       - uses: antfu/sponsorkit-action@v1
         with:
           github_token: ${{ secrets.SPONSORS_TOKEN }}
+          github_login: Inerska
           output_dir: assets
 
       - uses: stefanzweifel/git-auto-commit-action@v5
