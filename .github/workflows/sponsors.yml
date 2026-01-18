@@ -16,9 +16,11 @@ jobs:
           node-version: 20
 
       - name: Generate sponsors
-        run: npx sponsorkit --login Inerska --output-dir assets
+        run: npx sponsorkit --dir assets
         env:
-          GITHUB_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
+          SPONSORKIT_GITHUB_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
+          SPONSORKIT_GITHUB_LOGIN: Inerska
+          SPONSORKIT_GITHUB_TYPE: user
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
