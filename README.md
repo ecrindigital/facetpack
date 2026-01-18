@@ -82,11 +82,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Sponsors
 
-<a href="https://github.com/sponsors/ecrindigital">
+<a href="https://github.com/sponsors/Inerska">
   <img src="assets/sponsors.svg" alt="Sponsors" />
 </a>
 
-[Become a sponsor](https://github.com/sponsors/ecrindigital)
+[Become a sponsor](https://github.com/sponsors/Inerska)
 
 <br/>
 
