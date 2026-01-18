@@ -11,11 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: antfu/sponsorkit-action@v1
+      - uses: actions/setup-node@v4
         with:
-          github_token: ${{ secrets.SPONSORS_TOKEN }}
-          github_login: Inerska
-          output_dir: assets
+          node-version: 20
+
+      - name: Generate sponsors
+        run: npx sponsorkit --login Inerska --output-dir assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
