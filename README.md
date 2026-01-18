@@ -1,181 +1,101 @@
+<h1 align="center">
+FACETPACK
+</h1>
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/ecrindigital/facetpack/main/assets/social-preview.jpg" alt="Facetpack" width="100%" />
+  <b>The Modern React Native Toolkit</b>
 </p>
 
 <p align="center">
-  <b>⚡ 36x faster Metro transforms for React Native</b><br/>
-  <sub>Rust-powered. Drop-in Babel replacement.</sub>
+  <a href="https://www.npmjs.com/package/@ecrindigital/facetpack"><img src="https://img.shields.io/npm/v/@ecrindigital/facetpack.svg" alt="npm" /></a>
+  <a href="https://discord.gg/kX7xzknGmv"><img src="https://img.shields.io/discord/1457120530409980069?color=7289da&logo=discord&logoColor=white" alt="Discord" /></a>
 </p>
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/@ecrindigital/facetpack">
-    <img src="https://img.shields.io/npm/v/@ecrindigital/facetpack.svg" alt="npm version" />
-  </a>
-  <a href="https://www.npmjs.com/package/@ecrindigital/facetpack">
-    <img src="https://img.shields.io/npm/dm/@ecrindigital/facetpack.svg" alt="npm downloads" />
-  </a>
-  <a href="https://discord.gg/kX7xzknGmv">
-    <img src="https://img.shields.io/discord/1457120530409980069?color=7289da&label=Discord&logo=discord&logoColor=white" alt="Discord" />
-  </a>
-  <a href="https://github.com/ecrindigital/facetpack/stargazers">
-    <img src="https://img.shields.io/github/stars/ecrindigital/facetpack.svg?style=social" alt="GitHub stars" />
-  </a>
-</p>
+<br/>
 
----
-
-## Performance
-
-| Benchmark | Babel | Facetpack | Speedup |
-|-----------|-------|-----------|---------|
-| Transform (small) | 244 µs | 7.8 µs | **31x** |
-| Transform (large) | 2.47 ms | 64 µs | **38x** |
-| Resolve (cold) | 31.6 ms | 10.8 ms | **3x** |
-
-<sub>Tested on Apple M3 Max</sub>
-
-## Quick Start
+## Install
 
 ```bash
-npm install @ecrindigital/facetpack
+npm i @ecrindigital/facetpack
 ```
 
 ```js
 // metro.config.js
-const { getDefaultConfig } = require('expo/metro-config')
 const { withFacetpack } = require('@ecrindigital/facetpack')
-
-module.exports = withFacetpack(getDefaultConfig(__dirname))
+module.exports = withFacetpack(require('expo/metro-config').getDefaultConfig(__dirname))
 ```
 
-**That's it.** ⚡
+Done.
 
----
+<br/>
 
-## Part of the Facet Ecosystem
+## Why Facetpack?
 
-Facetpack is the foundation of **Facet**, the modern toolchain for React Native.
+- **36x faster transforms** — Rust-powered OXC replaces Babel
+- **Better errors** — Clear, actionable error messages
+- **Smart fallback** — Graceful Babel fallback for Flow packages
+- **Doctor CLI** — Diagnose and auto-fix common issues
+- **Drop-in** — One line to install, zero config
 
-| Coming Soon | Description |
-|-------------|-------------|
-| 🌳 Tree-shaking | 30% smaller bundles |
-| 🩺 Facet Doctor | Diagnose & auto-fix issues |
-| ⚡ Facet CLI | Faster dev server |
-| 🤖 f0 | AI component generation |
-| more tools    | coming soon |
+<br/>
 
-**[⭐ Star this repo](https://github.com/ecrindigital/facetpack)** to follow along!
+## Benchmark
 
----
+| | Babel | Facetpack |
+|---|---|---|
+| Transform | 2.47ms | **64µs** |
+| Resolve | 31.6ms | **10.8ms** |
 
-## How it works
+<sub>Apple M3 Max</sub>
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Metro Build                          │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  User Code (.ts, .tsx)                                      │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │   Parse     │ -> │  Transform  │ -> │  Codegen    │     │
-│  │   (OXC)     │    │   (OXC)     │    │   (OXC)     │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
-│                                                             │
-│  Node Modules (Flow packages)                               │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐     │
-│  │   Parse     │ -> │  Transform  │ -> │  Codegen    │     │
-│  │  (Babel)    │    │  (Babel)    │    │  (Babel)    │     │
-│  └─────────────┘    └─────────────┘    └─────────────┘     │
-│                                                             │
-│  Resolution                                                 │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │  Batch Resolve (OXC Resolver via NAPI)              │   │
-│  │  Single FFI call for all imports in a file          │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+<br/>
 
-## Architecture
-
-```
-packages/
-├── facetpack/           # Metro integration (TypeScript)
-│   ├── withFacetpack    # Config wrapper
-│   ├── transformer      # OXC transformer + Babel fallback
-│   └── resolver         # Cached batch resolver
-│
-└── facetpack-native/    # Native bindings (Rust + NAPI)
-    ├── oxc_parser       # Parsing
-    ├── oxc_transformer  # TS/JSX transformation
-    ├── oxc_codegen      # Code generation
-    └── oxc_resolver     # Module resolution
-```
-
-## Options
-
-```js
-module.exports = withFacetpack(config, {
-  // JSX runtime: 'automatic' (default) or 'classic'
-  jsxRuntime: 'automatic',
-
-  // JSX import source for automatic runtime
-  jsxImportSource: 'react',
-
-  // JSX pragma for classic runtime
-  jsxPragma: 'React.createElement',
-  jsxPragmaFrag: 'React.Fragment',
-
-  // File extensions to transform
-  sourceExts: ['ts', 'tsx', 'js', 'jsx', 'mjs', 'cjs'],
-})
-```
-
-## Debug Mode
-
-Enable debug logging:
+## Debug
 
 ```bash
 FACETPACK_DEBUG=1 npx expo start
 ```
 
-## Limitations
+<br/>
 
-- Flow packages (react-native core, reanimated, gesture-handler, etc.) use Babel fallback
-- OXC doesn't support ES5 class transformation yet (not needed for Hermes)
+## Packages
 
-## Run Benchmarks
+| Package | Version |
+|---------|---------|
+| [facetpack](packages/facetpack) | [![npm](https://img.shields.io/npm/v/@ecrindigital/facetpack.svg)](https://www.npmjs.com/package/@ecrindigital/facetpack) |
+| [facetpack-native](packages/facetpack-native) | [![npm](https://img.shields.io/npm/v/@ecrindigital/facetpack-native.svg)](https://www.npmjs.com/package/@ecrindigital/facetpack-native) |
+| [facet-cli](packages/facet-cli) | [![npm](https://img.shields.io/npm/v/@ecrindigital/facet-cli.svg)](https://www.npmjs.com/package/@ecrindigital/facet-cli) |
+
+<br/>
+
+## Contributing
 
 ```bash
-cd examples/benchmark
-bun run.ts                    # Full benchmark with Metro build
-bun run.ts --transformer-only # Skip Metro build benchmark
-```
-
-## Development
-
-```bash
-# Install dependencies
 bun install
-
-# Build native bindings
-cd packages/facetpack-native
 bun run build
-
-# Build TypeScript package
-cd packages/facetpack
-bun run build
-
-# Run tests
 bun test
 ```
 
-## Community
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-Join our Discord to get help, share feedback, and connect with other developers using Facetpack:
+<br/>
 
-[![Discord](https://img.shields.io/discord/1457120530409980069?color=7289da&label=Join%20our%20Discord&logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/kX7xzknGmv)
+## Sponsors
+
+<a href="https://github.com/sponsors/ecrindigital">
+  <img src="assets/sponsors.svg" alt="Sponsors" />
+</a>
+
+[Become a sponsor](https://github.com/sponsors/ecrindigital)
+
+<br/>
 
 ## License
 
-MIT - [Ecrin Digital](https://ecrin.digital)
+MIT © [Ecrin Digital](https://ecrin.digital)
+
+<br/>
+
+## Links
+
+[Discord](https://discord.gg/kX7xzknGmv) · [Issues](https://github.com/ecrindigital/facetpack/issues) · [Twitter](https://twitter.com/ecrindigital)

@@ -1,0 +1,22 @@
+name: Sponsors
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  sponsors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: antfu/sponsorkit-action@v1
+        with:
+          github_token: ${{ secrets.SPONSORS_TOKEN }}
+          output_dir: assets
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: update sponsors'
+          file_pattern: 'assets/sponsors.*'
